@@ -8,13 +8,19 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon ./git.js"
+    "start": "nodemon ./bin/www"
   },
   "keywords": [],
   "license": "ISC",
   "dependencies": {
+    "boom": "^7.3.0",
     "child_process": "^1.0.2",
-    "nodemon": "^2.0.7",
-    "js-hodgepodge": "^1.3.3"
+    "cors": "^2.8.5",
+    "express": "~4.16.1",
+    "express-validator": "^6.5.0",
+    "http-errors": "~1.6.3",
+    "js-hodgepodge": "^1.3.3",
+    "morgan": "~1.9.1",
+    "nodemon": "^2.0.7"
   }
 }
