@@ -4,11 +4,13 @@ const Result = require('./result')
 
 const { 
   getJsonDataByName,
-  setJsonDataByName 
+  setJsonDataByName,
+  rmdirRecursive
 } = require('./handleJsonFile')
 
 const {
-  gitPro
+  gitPro,
+  shellPro
 } = require('./processFlow')
 
 function checkBeforRes(
@@ -39,9 +41,10 @@ module.exports = {
   checkBeforRes,
   getJsonDataByName,
   setJsonDataByName,
-  // getClientIP
+  rmdirRecursive,
 
   gitPro,
+  shellPro,
 
   Result
 }

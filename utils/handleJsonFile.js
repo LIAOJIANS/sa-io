@@ -6,19 +6,20 @@ const baseUrl = path.resolve(__dirname, '../data')
 const pathSplicing = fileName => `${baseUrl}/${fileName}.json`
 
 function getJsonDataByName(
-  fileName
+  fileName,
+  defalut = {}
 ) {
 
   const filePath = pathSplicing(fileName)
 
-  if (fs.existsSync(filePath)) {
+  if (!fs.existsSync(filePath)) {
 
     fs.writeFileSync(
       filePath,
-      '{}'
+      JSON.stringify(defalut)
     )
 
-    return {}
+    return defalut
   }
 
   const data = fs.readFileSync(
@@ -48,7 +49,28 @@ function setJsonDataByName(
   )
 }
 
+function rmdirRecursive(projectName) {
+
+  const dirPath = path.resolve(__dirname, `../project/${projectName}`)
+
+  // const entries = fs.readFileSync(dirPath, { withFileTypes: true });  
+  
+  // for (const entry of entries) {  
+  //   const fullPath = path.join(dirPath, entry.name);  
+  
+  //   if (entry.isDirectory()) {  
+  //      rmdirRecursive(fullPath);  
+  //   } else {  
+  //      fs.unlinkSync(fullPath);  
+  //   }  
+  // }  
+  
+  fs.rmSync(dirPath, { recursive: true, force: true });  
+
+}  
+
 module.exports = {
   getJsonDataByName,
-  setJsonDataByName
+  setJsonDataByName,
+  rmdirRecursive
 }

@@ -1,6 +1,5 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig, InternalAxiosRequestConfig, Method } from 'axios'
 import { ElMessage } from 'element-plus'
-// import { useUserStore } from '../../store/user'
 
 export interface IResult {
   code: number,
@@ -11,7 +10,7 @@ export interface IResult {
 
 export interface IRequest {
   url: string,
-  method?: 'post' | 'get' | 'put',
+  method?: Method,
   params?: any,
   data?: Record<string, any>,
   [key: string]: any
@@ -49,14 +48,13 @@ class Axios<IRequest, IResult> {
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig,) => {
         config.headers!['Content-Type'] = 'application/json;charset=UTF-8'
-
-
+        
         return config
       },
       (error: Error) => {
 
         ElMessage({
-          message: error.message || '未知错误！',
+          message: error.message || 'error!',
           type: 'error'
         })
 

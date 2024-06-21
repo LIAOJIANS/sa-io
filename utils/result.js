@@ -29,7 +29,7 @@ class Result {
     }
 
     if (this.data) {
-      base.data = this.data
+      base.content = this.data
     }
 
     if (this.options) {

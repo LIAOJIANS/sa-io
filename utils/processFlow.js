@@ -1,8 +1,12 @@
 const { spawn } = require('child_process')
+const path = require('path')
 
 const targetName = () => gitUrl.match(/(\/[^\/]+)\.git$/)[1]
 
-const cloneDir = projectName => path.join(__dirname, `../project/${projectName}`)
+const cloneDir = (
+  projectName,
+  dir = 'project'
+) => path.join(__dirname, `../${dir}/${projectName}`)
 
 function handleProcess(
   proName,
@@ -13,7 +17,6 @@ function handleProcess(
     const process = spawn(proName, pro, option)
 
     /* 怎么按顺序全局收集日志信息？ */
-
     process.stdout.on('data', (data) => {
       console.log(`${data}`);  
     });  
@@ -40,6 +43,16 @@ function gitPro(
   )
 }
 
+function shellPro(
+  projectName
+) {
+  return handleProcess(
+    'sh',
+    [cloneDir(projectName, 'sh')]
+  )
+}
+
 module.exports = {
-  gitPro
+  gitPro,
+  shellPro
 }
