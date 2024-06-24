@@ -15,6 +15,7 @@
   "dependencies": {
     "boom": "^7.3.0",
     "child_process": "^1.0.2",
+    "chokidar": "^3.6.0",
     "cors": "^2.8.5",
     "express": "~4.16.1",
     "express-validator": "^6.5.0",

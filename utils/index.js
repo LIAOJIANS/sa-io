@@ -3,14 +3,17 @@ const { validationResult } = require('express-validator')
 const Result = require('./result')
 
 const { 
-  getJsonDataByName,
-  setJsonDataByName,
+  getFileContentByName,
+  setFileContentByName,
   rmdirRecursive
-} = require('./handleJsonFile')
+} = require('./handleFile')
 
 const {
   gitPro,
-  shellPro
+  shellPro,
+  buildPro,
+  installPro,
+  installAfterBuildPro
 } = require('./processFlow')
 
 function checkBeforRes(
@@ -39,12 +42,15 @@ function checkBeforRes(
 
 module.exports = {
   checkBeforRes,
-  getJsonDataByName,
-  setJsonDataByName,
+  getFileContentByName,
+  setFileContentByName,
   rmdirRecursive,
 
   gitPro,
   shellPro,
+  buildPro,
+  installPro,
+  installAfterBuildPro,
 
   Result
 }
