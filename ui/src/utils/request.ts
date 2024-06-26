@@ -66,7 +66,13 @@ class Axios<IRequest, IResult> {
   private interceptorsResponse() {
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse<any>) => {
-        return response
+        if(response.data.code == 200) {
+          return response
+        } else {
+          
+          ElMessage({ message: response.data.msg, type: 'error' })
+          return Promise.reject(response)
+        }
       },
       (error: any) => {
         return Promise.reject(error)

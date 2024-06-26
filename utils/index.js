@@ -5,7 +5,10 @@ const Result = require('./result')
 const { 
   getFileContentByName,
   setFileContentByName,
-  rmdirRecursive
+  rmdirRecursive,
+  download,
+  compressed,
+  copyFile
 } = require('./handleFile')
 
 const {
@@ -13,12 +16,14 @@ const {
   shellPro,
   buildPro,
   installPro,
-  installAfterBuildPro
+  installAfterBuildPro,
+  gitPullPro,
+  gitCheckoutPro
 } = require('./processFlow')
 
 function checkBeforRes(
   next, 
-  req, 
+  req,
   handleRes
 ) {
 
@@ -45,12 +50,17 @@ module.exports = {
   getFileContentByName,
   setFileContentByName,
   rmdirRecursive,
-
+  download,
+  compressed,
+  copyFile,
+  
+  gitPullPro,
   gitPro,
   shellPro,
   buildPro,
   installPro,
   installAfterBuildPro,
+  gitCheckoutPro,
 
   Result
 }

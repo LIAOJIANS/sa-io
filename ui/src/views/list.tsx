@@ -12,7 +12,8 @@ export default defineComponent({
 
       formData: {
         projectName: '',
-        targetUrl: ''
+        targetUrl: '',
+        useToken: true
       },
 
       loading: {
@@ -22,7 +23,10 @@ export default defineComponent({
 
       dialogFormVisible: false,
       buildDailogVisible: false,
-      buildProjectName: '',
+      buildProjectName: {
+        projectName: '',
+        branch: ''
+      },
 
       rules: {
         projectName: [{ required: true, message: 'Please enter the git Project Name', trigger: 'change' }],
@@ -54,9 +58,9 @@ export default defineComponent({
 
       handleDialog: (flag: boolean) => state.dialogFormVisible = flag,
 
-      beforeBuild: (projectName: string) => {
+      beforeBuild: (row: { projectName: string, branch: string }) => {
         
-        state.buildProjectName = projectName
+        state.buildProjectName = row
         state.buildDailogVisible = true
       },
 
@@ -109,7 +113,7 @@ export default defineComponent({
         <el-table-column label="operation" width="180"
           v-slots={{
             default: ({ row }:  { row: any } ) => <>
-              <el-button type="primary" onClick={ () => handler.beforeBuild(row.projectName) }>build</el-button>
+              <el-button type="primary" onClick={ () => handler.beforeBuild(row) }>build</el-button>
               <el-button type="danger" onClick={ () => handler.delete(row.projectName) }>del</el-button>
             </>
           }}
@@ -135,13 +139,17 @@ export default defineComponent({
           <el-form-item label="Target Url" prop="targetUrl" >
             <el-input v-model={state.formData.targetUrl} clearable />
           </el-form-item>
+          <el-form-item label="Use Git Config" prop="useToken" >
+            <el-checkbox v-model={state.formData.useToken}></el-checkbox>
+          </el-form-item>
         </el-form>
       </el-dialog>
       
       { state.buildDailogVisible && (
         <Build
           buildDailogVisible={ state.buildDailogVisible }
-          projectName={ state.buildProjectName }
+          projectName={ state.buildProjectName.projectName }
+          branch={ state.buildProjectName.branch }
           onCloseDialog={ () => ( state.buildDailogVisible = false ) }
         />
       ) }

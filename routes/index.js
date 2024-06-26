@@ -11,10 +11,14 @@ const {
   setFileContentByName,
   checkBeforRes,
   rmdirRecursive,
+  download,
+  compressed,
+  copyFile,
 
   gitPro,
   installAfterBuildPro,
   buildPro,
+  gitCheckoutPro,
 
   Result,
 } = require('../utils');
@@ -62,7 +66,7 @@ router.post(
   ],
   (req, res, next) => {
     checkBeforRes(next, req, () => {
-      const { targetUrl, projectName } = req.body
+      const { targetUrl, projectName, useToken } = req.body
 
       const { username, token } = getFileContentByName('gitToken')
 
@@ -74,7 +78,9 @@ router.post(
 
       const [http, addr] = targetUrl.split('//')
 
-      const gitTargetUrl = `${http}//${encodeURIComponent(username)}:${encodeURIComponent(token)}@${addr}`
+      const gitTargetUrl = !(token && username) || !useToken ?
+        targetUrl :
+        `${http}//${encodeURIComponent(username)}:${encodeURIComponent(token)}@${addr}`
 
       // 根据projectName执行git工作流
       gitPro(
@@ -102,6 +108,7 @@ router.post(
 
         new Result(null, 'create success!!').success(res)
       })
+        .catch(() => new Result(null, 'error!').fail(res))
     });
   });
 
@@ -158,7 +165,7 @@ router.post('/get_shell_content', [
       path.resolve(__dirname, `../project/${projectName}/build.sh`)
     )
 
-    new Result(shellContent).success()
+    new Result(shellContent).success(res)
   })
 })
 
@@ -171,15 +178,17 @@ router.post('/build', [
     ))(),
 ], (req, res, next) => {
   checkBeforRes(next, req, async () => {
-    const { shell, install, shellContent, branch, projectName } = res.body
+
+    const { shell, install, shellContent, branch, projectName, ...onter } = req.body
 
     if (os.platform() !== 'linux' && shell) {
       return new Result(null, 'Running shell scripts must be in a Linux environment!!!')
         .fail(res)
     }
+
     const curTime = Date.now()
     const fileName = `${projectName}-${curTime}.log`
-    const logPath =  path.resolve(__dirname, `../log/${fileName}`)
+    const logPath = path.resolve(__dirname, `../log/${fileName}`)
 
     let status = 'success'
 
@@ -193,6 +202,74 @@ router.post('/build', [
       logPath
     )
 
+    if (branch) { // 如果有分支，并且分支不能等于当前分支，否则切换分支并拉取最新
+      const projects = getFileContentByName('projects')
+
+      const project = projects.find(p => p.projectName === projectName)
+
+      if (project.branch !== branch) {
+        try {
+          await gitCheckoutPro(projectName, branch)
+
+          setFileContentByName('projects', [
+            ...projects.map(p => { 
+              if(p.projectName === projectName) {
+                p.branch = branch
+              }
+
+              return p
+            }),
+            true
+          ])
+        } catch (e) {
+          new Result(null, 'checkout error!!! Please review the log output!!!!!!').fild(res)
+
+          setFileContentByName(
+            'history',
+            [
+              ...data,
+              {
+                projectName,
+                buildTime: curTime,
+                status: 'error',
+                branch
+              }
+            ],
+            true
+          )
+
+          return
+        }
+
+      }
+    }
+
+    new Result(`${projectName}-${curTime}`, 'building, Please review the log output!!!!!!').success(res)
+
+    const compressedPro = () => {
+      compressed(`${projectName}-${curTime}`)
+
+      copyFile(
+        path.resolve(__dirname, `../project/${projectName}/dist`),
+        path.resolve(__dirname, `../builds/${projectName}-${curTime}`)
+      )
+
+      const { 
+        publish, 
+        ...left
+      } = onter
+
+      if(publish) {
+        const publishTragetServer = require('../utils/publish')
+
+        publishTragetServer({
+          ...left,
+          localPath: path.resolve(__dirname, `../builds/${projectName}-${curTime}`)
+        })
+      }
+
+    }
+
     if (shell) { // 执行sh脚本
 
       setFileContentByName(
@@ -203,31 +280,31 @@ router.post('/build', [
       )
 
       await shellPro(projectName, logPath)
-        .then(() => new Result('build success !!!').success(res))
+        .then(compressedPro)
         .catch(() => {
-          new Result(null, 'Please review the log output!!!').fail(res)
           status = 'error'
         })
     } else { // 执行打包工作流
-
       (
-        [install ? 'installAfterBuildPro' : 'buildPro'](projectName, logPath)
-          .then(() => new Result('build success !!!').success(res))
+        await (install ? installAfterBuildPro : buildPro)(projectName, logPath)
+          .then(compressedPro)
           .catch(() => {
-            new Result(null, 'Please review the log output!!!').fail(res)
             status = 'error'
           })
       )
-
     }
 
     setFileContentByName(
       'history',
-      data.push({
-        projectName,
-        buildTime: curTime,
-        status
-      }),
+      [
+        ...data,
+        {
+          projectName,
+          buildTime: curTime,
+          status,
+          branch
+        }
+      ],
       true
     )
 
@@ -245,32 +322,56 @@ router.get('/get_log', [
     res.setHeader('Cache-Control', 'no-cache')
     res.setHeader('Connection', 'keep-alive')
 
-    const projects = getFileContentByName('history', [])
+    const logPath = path.resolve(__dirname, `../log/${projectName}.log`)
 
-    const project = projects.find(p => p.projectName === projectName)
+    const logContent = getFileContentByName(null, '', logPath)
 
-    if(!project) {
-      return new Result().success(res)
-    }
+    const data = { content: logContent.replace(/\n/g, '<br>') }
+    /*
+      防止请求时流程已经走完，从而监听不到最新日志内容
+    */
+    res.write(`data: ${data.content}\n\n`)
 
-    const logPath = path.resolve(__dirname, `../log/${projectName}-${project.buildTime}.log`)
-    chokidar
-      .watch(logPath, { persistent: true })
+    const watcher = chokidar.watch(logPath, { persistent: true })
+
+    watcher
       .on('change', (path) => {
 
         const logContent = getFileContentByName(null, '', path)  // 是否要做内容新旧对比只返回更改后的内容
 
-        res.writable ? res.write(logContent) : watcher.close()
+        res.writable ? res.write(`data: ${logContent.replace(/\n/g, '<br>')}}\n\n`) : watcher.close()
       })
 
-    req.on('end', watcher.close)  
+    req.on('end', watcher.close)
   })
 })
 
 router.get('/get_history', (req, res, next) => {
   const data = getFileContentByName('history', [])
 
-  new Result(null, data).success(res)
+  new Result(data).success(res)
+})
+
+router.post('/download', [
+  query('projectName').notEmpty().withMessage('projectName is null!!!')
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+    const { projectName } = req.query
+
+    download(
+      stream => {
+        res.set({
+          'Content-Type': 'application/octet-stream',
+          'Content-Disposition': `attachment; filename="${req.query.projectName}.zip"`
+        })
+
+        stream.pipe(res)
+      },
+      () => new Result(null, 'download error').fail(res),
+      path.resolve(__dirname, `../builds/${projectName}.zip`)
+    )
+
+  })
 })
 
 router.use((req, res, next) => {

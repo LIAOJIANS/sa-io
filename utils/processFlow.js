@@ -1,6 +1,9 @@
 const { spawn } = require('child_process')
 const path = require('path')
 const { setFileContentByName } = require('./handleFile')
+const os = require('os')
+
+const platform = () => os.platform() === 'win32'
 
 const cloneDir = (
   projectName,
@@ -12,7 +15,8 @@ function handleProcess(
     proName,
     pro, 
     option = {},
-    filePath
+    filePath,
+    setLog = true
   }
 ) {
   return new Promise((reslove, reject) => {
@@ -35,7 +39,7 @@ function handleProcess(
       code === 0 ? reslove() : reject()
 
       // 写入日志，并开启sse单项通信推送日志
-      if(proName !== 'git') {
+      if(setLog) {
         setFileContentByName(
           '',
           log,
@@ -53,7 +57,8 @@ function gitPro(
 ) {
   return handleProcess({
     proName: 'git',
-    pro: ['clone', targetUrl, cloneDir(projectName)]
+    pro: ['clone', targetUrl, cloneDir(projectName)],
+    setLog: false
   })
 }
 
@@ -73,10 +78,10 @@ function shellPro(
 function buildPro(projectName, filePath) {
   return handleProcess(
     {
-      proName: 'npm',
+      proName: `npm${platform() ? '.cmd' : ''}`,
       pro: ['run', 'build'],
       option: {  
-        cwd: cloneDir(`${projectName}/build.sh`),
+        cwd: cloneDir(`${projectName}`),
       },
       filePath
     }
@@ -86,10 +91,10 @@ function buildPro(projectName, filePath) {
 function installPro(projectName, filePath) {
   return handleProcess(
     {
-      proName: 'npm',
+      proName: `npm${platform() ? '.cmd' : ''}`,
       pro: ['install'],
       option: {  
-        cwd: cloneDir(`${projectName}/build.sh`),
+        cwd: cloneDir(projectName),
       },
       filePath
     }
@@ -100,13 +105,43 @@ function installAfterBuildPro(projectName, filePath) {
   return new Promise(async (reslove, reject) => {
     try {
       await installPro(projectName, filePath)
+
+      buildPro(projectName, filePath)
+        .then(reslove)
+        .catch(reject)
     } catch(e) {
       reject()
     }
+  })
+}
 
-    buildPro(projectName, filePath)
-      .then(reslove)
-      .catch(reject)
+function gitPullPro(projectName) {
+  return handleProcess({
+    proName: 'git',
+    pro: ['pull'],
+    option: {
+      cwd: cloneDir(projectName)
+    }
+  })
+}
+
+function gitCheckoutPro(projectName, branch) {
+  return new Promise(async (reslove, reject) => {
+    try {
+      await handleProcess({
+        proName: 'git',
+        pro: ['checkout', branch],
+        option: {
+          cwd: cloneDir(projectName)
+        }
+      })
+
+      gitPullPro(projectName)
+        .then(() => reslove())
+        .catch(() => reject())
+    } catch(e) {
+      reject()
+    }
   })
 }
 
@@ -116,5 +151,7 @@ module.exports = {
   cloneDir,
   buildPro,
   installPro,
-  installAfterBuildPro
+  installAfterBuildPro,
+  gitPullPro,
+  gitCheckoutPro
 }

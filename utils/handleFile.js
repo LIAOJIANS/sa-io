@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const archiverFun = require('archiver')
 
 const baseUrl = path.resolve(__dirname, '../data')
 
@@ -8,12 +9,12 @@ const pathSplicing = fileName => `${baseUrl}/${fileName}.json`
 function getFileContentByName(
   fileName,
   defalut = {},
-  path = ''
+  onterPath = ''
 ) {
 
-  const filePath = pathSplicing(path || fileName)
+  const filePath = onterPath || pathSplicing(fileName)
 
-  const typeofData = data => (typeof data === 'string')()
+  const typeofData = data => (typeof data === 'string')
 
   if (!fs.existsSync(filePath)) {
 
@@ -29,18 +30,22 @@ function getFileContentByName(
     filePath,
     'utf-8'
   )
-
-  return typeofData(data) ? data : JSON.parse(data)
+  
+  try {
+    return JSON.parse(data)
+  } catch (error) {
+    return data
+  }
 }
 
 function setFileContentByName(
   fileName,
   data,
   isCover,
-  path = ''
+  onterPath = ''
 ) {
 
-  const filePath = pathSplicing(path || fileName)
+  const filePath = onterPath || pathSplicing(fileName)
 
   fs[
     isCover ?
@@ -71,10 +76,52 @@ function rmdirRecursive(projectName) {
   
   fs.rmSync(dirPath, { recursive: true, force: true });  
 
-}  
+}
+
+function download(success, error, path) {
+  try {
+    const stream = fs.createReadStream(path)
+    success?.(stream)
+  } catch(err) {
+    error?.()
+  }
+}
+
+function compressed(projectName) {
+  const archiver = archiverFun('zip', {
+    zlib: { level: 9 }
+  })
+
+  const output = fs.createWriteStream(`./${projectName}.zip`); 
+
+  archiver.on('warning', (err) => {  
+    if (err.code === 'ENOENT') {  
+      console.warn(err) 
+    } else {  
+      throw err
+    }  
+  }) 
+
+  archiver.on('error', (err) => {  
+    throw err
+  })
+
+  archiver.pipe(output)
+
+  archiver.directory(path.resolve(__dirname, `../builds/`), false)
+  
+  archiver.finalize()
+}
+
+function copyFile(from, to) {
+  fs.copyFile(from, to)
+}
 
 module.exports = {
   getFileContentByName,
   setFileContentByName,
-  rmdirRecursive
+  rmdirRecursive,
+  download,
+  compressed,
+  copyFile
 }

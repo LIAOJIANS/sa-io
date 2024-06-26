@@ -9,7 +9,6 @@ class Result {
     if (arguments.length === 0) {
       this.msg = 'Operation successful!'
     } else if (arguments.length === 1) {
-      this.msg = typeof data !== 'string' ? 'Operation successful!' : data
       this.data = data
     } else {
       this.data = data
@@ -25,7 +24,7 @@ class Result {
 
     let base = {
       code: this.code,
-      msg: this.msg
+      message: this.msg || 'Operation successful!'
     }
 
     if (this.data) {
