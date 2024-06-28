@@ -19,9 +19,12 @@ const {
   installAfterBuildPro,
   buildPro,
   gitCheckoutPro,
+  shellPro,
 
   Result,
 } = require('../utils');
+
+const publishTragetServer = require('../utils/publish')
 
 const router = express.Router()
 
@@ -110,7 +113,7 @@ router.post(
       })
         .catch(() => new Result(null, 'error!').fail(res))
     });
-  });
+});
 
 router.get('/get_projects', (req, res, next) => {
   checkBeforRes(next, req, () => {
@@ -212,17 +215,16 @@ router.post('/build', [
           await gitCheckoutPro(projectName, branch)
 
           setFileContentByName('projects', [
-            ...projects.map(p => { 
-              if(p.projectName === projectName) {
+            ...projects.map(p => {
+              if (p.projectName === projectName) {
                 p.branch = branch
               }
 
               return p
-            }),
-            true
-          ])
+            })
+          ], true)
         } catch (e) {
-          new Result(null, 'checkout error!!! Please review the log output!!!!!!').fild(res)
+          new Result(null, 'checkout error!!! Please review the log output!!!!!!').fail(res)
 
           setFileContentByName(
             'history',
@@ -247,27 +249,27 @@ router.post('/build', [
     new Result(`${projectName}-${curTime}`, 'building, Please review the log output!!!!!!').success(res)
 
     const compressedPro = () => {
-      compressed(`${projectName}-${curTime}`)
+      status = 'success'
+      compressed(`${projectName}-${curTime}`, projectName)
 
+      console.log('success')
       copyFile(
         path.resolve(__dirname, `../project/${projectName}/dist`),
         path.resolve(__dirname, `../builds/${projectName}-${curTime}`)
       )
 
-      const { 
-        publish, 
+      const {
+        publish,
         ...left
       } = onter
 
-      if(publish) {
-        const publishTragetServer = require('../utils/publish')
-
+      if (publish) {
         publishTragetServer({
           ...left,
           localPath: path.resolve(__dirname, `../builds/${projectName}-${curTime}`)
         })
       }
-
+      
     }
 
     if (shell) { // 执行sh脚本
@@ -283,6 +285,7 @@ router.post('/build', [
         .then(compressedPro)
         .catch(() => {
           status = 'error'
+          console.log('error')
         })
     } else { // 执行打包工作流
       (
@@ -290,6 +293,7 @@ router.post('/build', [
           .then(compressedPro)
           .catch(() => {
             status = 'error'
+            console.log('error')
           })
       )
     }
@@ -362,7 +366,7 @@ router.post('/download', [
       stream => {
         res.set({
           'Content-Type': 'application/octet-stream',
-          'Content-Disposition': `attachment; filename="${req.query.projectName}.zip"`
+          'Content-Disposition': `attachment; filename=${req.query.projectName}.zip`
         })
 
         stream.pipe(res)
@@ -371,6 +375,28 @@ router.post('/download', [
       path.resolve(__dirname, `../builds/${projectName}.zip`)
     )
 
+  })
+})
+
+router.post('/publish', [
+  (() =>
+    ['pubTargetIp', 'pubTargetProt', 'pubTargetDir', 'pubTargetUser', 'pubTargetPwd', 'projectName'].map((fild) =>
+      body(fild)
+        .notEmpty()
+        .withMessage('someing is null'),
+    ))(),
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+    const { 
+      projectName,
+      ...onter
+    } = req.body
+
+    publishTragetServer({
+      ...onter,
+      localPath: path.resolve(__dirname, `../builds/${projectName}`)
+    }, () => new Result(null, 'publish success').success(res), () => new Result(null, 'publish error').fail(res))
+    
   })
 })
 

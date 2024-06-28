@@ -19,7 +19,7 @@ export default defineComponent({
     onMounted(() => {
       const eventSource =
         eventSourceRef.value =
-        new EventSource(`/api/get_log?projectName=${props.projectName}`)
+        new EventSource(`${process.env.NODE_ENV === 'development' ? '/api' : ''}/get_log?projectName=${props.projectName}`)
 
       eventSource.onmessage = (event) => {
         logContent.value = `${event.data}`.replace(/<br>/g, '\n')

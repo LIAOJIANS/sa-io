@@ -1,6 +1,7 @@
 import { defineComponent, onMounted, reactive } from "vue";
-import { getGitInfo, setGitInfo } from '../api'
 import { ElMessage, ElForm } from "element-plus";
+
+import { getGitInfo, setGitInfo } from '../api'
 import useRefs from "../hooks/useRefs";
 
 export default defineComponent({

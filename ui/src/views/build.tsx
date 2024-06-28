@@ -1,8 +1,9 @@
 import { defineComponent, reactive } from 'vue'
+import { ElMessage, ElForm } from 'element-plus'
 
 import { getShellContent as apiGetShellContent, build } from '../api'
-import { ElMessage } from 'element-plus'
 import LogDialog from './logDialog'
+import useRefs from "../hooks/useRefs";
 
 export default defineComponent({
 
@@ -17,6 +18,10 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+
+    const { onRef, refs } = useRefs({
+      form: ElForm
+    })
 
     const state = reactive({
       formData: {
@@ -59,19 +64,24 @@ export default defineComponent({
       },
 
       build: () => {
-        build<string>({
-          ...state.formData,
-          projectName: props.projectName!
-        })
-          .then(res => {
-            ElMessage({
-              type: 'success',
-              message: res.data.message
+        refs.form?.validate(fild => {
+          if (fild === true) {
+            build<string>({
+              ...state.formData,
+              projectName: props.projectName!
             })
-
-            state.logProjectName = res.data.content
-            state.dialogFormVisible = true
-          })
+              .then(res => {
+                ElMessage({
+                  type: 'success',
+                  message: res.data.message
+                })
+    
+                state.logProjectName = res.data.content
+                state.dialogFormVisible = true
+              })
+          }
+        })
+        
       },
 
       getShellContent: () => {
@@ -99,7 +109,7 @@ export default defineComponent({
 
           before-close={handler.closeDialog}
         >
-          <el-form model={state.formData} label-width={140} rules={state.rules} style={{ width: '700px' }}>
+          <el-form ref={ onRef.form } model={state.formData} label-width={140} rules={state.rules} style={{ width: '700px' }}>
 
             <el-form-item label="is Install：">
               <el-checkbox v-model={state.formData.install}></el-checkbox>

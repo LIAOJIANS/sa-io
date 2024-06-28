@@ -25,4 +25,7 @@ export const getLog =
   <T>(projectName: string) => request<T>({ url: `/get_log?projectName=${projectName}` })
 
 export const download = 
-  (projectName: string) => request({ url: `/download?projectName=${projectName}`, method: 'post', responseType: 'blob' })
+  <T>(projectName: string) => request<T>({ url: `/download?projectName=${projectName}`, method: 'post', responseType: 'blob' })
+
+export const publish = 
+  <T>(data: any) => request<T>({ url: '/publish', method: 'post', data })

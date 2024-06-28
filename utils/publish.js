@@ -1,5 +1,5 @@
 const client = require('scp2')
-const ora = require('ora')
+// const ora = require('ora')
 const Client = require('ssh2').Client
 
 function publishTragetServer({
@@ -9,9 +9,9 @@ function publishTragetServer({
   pubTargetUser,
   pubTargetPwd,
   localPath
-}) {
+}, success, error) {
 
-  const spinner = ora('publishing server!')
+  // const spinner = ora('publishing server!')
   const conn = new Client()
 
   console.log('establishing connection~')
@@ -29,7 +29,7 @@ function publishTragetServer({
       console.log(err + 'rm file')
       stream.on('close', (code, signal) => {
         console.log('start publish')
-        spinner.start()
+        // spinner.start()
         client.scp(localPath, {
           host: pubTargetIp,
           port: pubTargetProt,
@@ -37,11 +37,11 @@ function publishTragetServer({
           password: pubTargetPwd,
           path: pubTargetDir
         }, err => {
-          spinner.stop()
+          // spinner.stop()
           if (!err) {
-            console.log('success')
+            success?.()
           } else {
-            console.log('err', err)
+            error?.()
           }
           conn.end()
         })

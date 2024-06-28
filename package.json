@@ -8,12 +8,13 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon ./bin/www"
+    "start": "nodemon ./bin/www",
+    "babel-start": "babel-node ./app"
   },
   "keywords": [],
   "license": "ISC",
   "dependencies": {
-    "archiver": "^7.0.1",
+    "archiver": "^6.0.1",
     "boom": "^7.3.0",
     "child_process": "^1.0.2",
     "chokidar": "^3.6.0",
@@ -25,5 +26,13 @@
     "morgan": "~1.9.1",
     "nodemon": "^2.0.7",
     "scp2": "^0.5.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.24.7",
+    "@babel/core": "^7.24.7",
+    "@babel/node": "^7.24.7",
+    "@babel/preset-env": "^7.24.7",
+    "@babel/preset-react": "^7.24.7",
+    "@babel/register": "^7.24.6"
   }
 }

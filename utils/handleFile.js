@@ -87,12 +87,13 @@ function download(success, error, path) {
   }
 }
 
-function compressed(projectName) {
+function compressed(projectName, formProjectName) {
+  console.log('打包成功！')
   const archiver = archiverFun('zip', {
     zlib: { level: 9 }
   })
 
-  const output = fs.createWriteStream(`./${projectName}.zip`); 
+  const output = fs.createWriteStream(path.resolve(__dirname, `../builds/${projectName}.zip`))
 
   archiver.on('warning', (err) => {  
     if (err.code === 'ENOENT') {  
@@ -108,13 +109,23 @@ function compressed(projectName) {
 
   archiver.pipe(output)
 
-  archiver.directory(path.resolve(__dirname, `../builds/`), false)
+  archiver.directory(path.resolve(__dirname, `../project/${formProjectName}/dist`), false)
   
   archiver.finalize()
 }
 
 function copyFile(from, to) {
-  fs.copyFile(from, to)
+  fs.mkdirSync(to, { recursive: true });
+  
+  fs.readdirSync(from).forEach(file => {  
+    const srcFile = path.join(from, file);  
+    const destFile = path.join(to, file);  
+  
+    fs.statSync(srcFile).isDirectory() ?   
+      copyFile(srcFile, destFile) :  
+      fs.copyFileSync(srcFile, destFile)
+      
+  })
 }
 
 module.exports = {

@@ -66,7 +66,7 @@ class Axios<IRequest, IResult> {
   private interceptorsResponse() {
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse<any>) => {
-        if(response.data.code == 200) {
+        if(response.data.code == 200 || response.status === 200) {
           return response
         } else {
           
@@ -100,7 +100,7 @@ class Axios<IRequest, IResult> {
       {
         timeout: 30000,
         withCredentials: true,
-        baseURL: '/api',
+        baseURL: process.env.NODE_ENV === 'development' ? '/api' : '/',
         headers: { 'Cache-Control': 'no-cache' }
       }
     ).request<AxiosReturnData<T>>(options)

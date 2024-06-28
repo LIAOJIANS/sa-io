@@ -56,6 +56,12 @@ export default defineComponent({
           .catch(() => methods.loading('form'))
       },
 
+      closeBuildDialog: () => {
+        state.buildDailogVisible = false
+        
+        methods.fetchData()
+      },
+
       handleDialog: (flag: boolean) => state.dialogFormVisible = flag,
 
       beforeBuild: (row: { projectName: string, branch: string }) => {
@@ -150,7 +156,7 @@ export default defineComponent({
           buildDailogVisible={ state.buildDailogVisible }
           projectName={ state.buildProjectName.projectName }
           branch={ state.buildProjectName.branch }
-          onCloseDialog={ () => ( state.buildDailogVisible = false ) }
+          onCloseDialog={ handler.closeBuildDialog }
         />
       ) }
       

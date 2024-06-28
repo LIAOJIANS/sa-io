@@ -36,14 +36,15 @@ function handleProcess(
     });  
     
     process.on('close', (code) => {
-      code === 0 ? reslove() : reject()
+
+      code == 0 ? reslove() : reject()
 
       // 写入日志，并开启sse单项通信推送日志
       if(setLog) {
         setFileContentByName(
           '',
           log,
-          true,
+          false,
           filePath
         )
       }
@@ -69,7 +70,10 @@ function shellPro(
   return handleProcess(
     {
       proName: 'sh',
-      pro: [cloneDir(`${projectName}/build.sh`)],
+      pro: ['./build.sh'],
+      option: {  
+        cwd: cloneDir(`${projectName}`),
+      },
       filePath
     }
   )

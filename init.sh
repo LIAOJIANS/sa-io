@@ -40,3 +40,5 @@ if ! nvm use v14.0.0 &> /dev/null; then
 else  
     echo "Node.js v14.0.0已通过nvm安装"  
 fi  
+
+# 重新加载bash配置文件（如~/.bashrc或~/.bash_profile）
