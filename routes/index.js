@@ -20,6 +20,7 @@ const {
   buildPro,
   gitCheckoutPro,
   shellPro,
+  gitPullPro,
 
   Result,
 } = require('../utils');
@@ -113,7 +114,7 @@ router.post(
       })
         .catch(() => new Result(null, 'error!').fail(res))
     });
-});
+  });
 
 router.get('/get_projects', (req, res, next) => {
   checkBeforRes(next, req, () => {
@@ -182,7 +183,7 @@ router.post('/build', [
 ], (req, res, next) => {
   checkBeforRes(next, req, async () => {
 
-    const { shell, install, shellContent, branch, projectName, ...onter } = req.body
+    const { shell, install, shellContent, branch, projectName, isPull, ...onter } = req.body
 
     if (os.platform() !== 'linux' && shell) {
       return new Result(null, 'Running shell scripts must be in a Linux environment!!!')
@@ -190,19 +191,38 @@ router.post('/build', [
     }
 
     const curTime = Date.now()
-    const fileName = `${projectName}-${curTime}.log`
+    const id = `${projectName}-${curTime}`
+    const fileName = `${id}.log`
     const logPath = path.resolve(__dirname, `../log/${fileName}`)
 
     let status = 'success'
 
+    const getHistory = () => getFileContentByName('history', [])
+
     // 生成构建历史
-    const data = getFileContentByName('history', [])
+    let data = [
+      ...getHistory(),
+      {
+        id,
+        projectName,
+        buildTime: curTime,
+        status: '',
+        branch
+      }
+    ]
 
     // 生成日志文件
     getFileContentByName(
       '',
       '',
       logPath
+    )
+
+    // 写入history基本信息
+    setFileContentByName(
+      'history',
+      data,
+      true
     )
 
     if (branch) { // 如果有分支，并且分支不能等于当前分支，否则切换分支并拉取最新
@@ -224,7 +244,6 @@ router.post('/build', [
             })
           ], true)
         } catch (e) {
-          new Result(null, 'checkout error!!! Please review the log output!!!!!!').fail(res)
 
           setFileContentByName(
             'history',
@@ -240,13 +259,20 @@ router.post('/build', [
             true
           )
 
-          return
+          res.status(500).send( 'checkout error!!! Please review the log output!!!!!!')
         }
 
+      } else if(isPull) { // 拉取最新
+        try {
+          await gitPullPro(projectName)
+        } catch(e) {
+          res.status(500).send( 'checkout error!!! Please review the log output!!!!!!')
+        }
       }
     }
 
-    new Result(`${projectName}-${curTime}`, 'building, Please review the log output!!!!!!').success(res)
+
+    new Result(`${id}`, 'building, Please review the log output!!!!!!').success(res)
 
     const compressedPro = () => {
       status = 'success'
@@ -269,7 +295,7 @@ router.post('/build', [
           localPath: path.resolve(__dirname, `../builds/${projectName}-${curTime}`)
         })
       }
-      
+
     }
 
     if (shell) { // 执行sh脚本
@@ -298,20 +324,21 @@ router.post('/build', [
       )
     }
 
+    let newData = getHistory()
+
+    newData = newData.map(c => {
+      if (c.id === id) {
+        c.status = status
+      }
+
+      return c
+    })
+
     setFileContentByName(
       'history',
-      [
-        ...data,
-        {
-          projectName,
-          buildTime: curTime,
-          status,
-          branch
-        }
-      ],
+      newData,
       true
     )
-
   })
 })
 
@@ -387,7 +414,7 @@ router.post('/publish', [
     ))(),
 ], (req, res, next) => {
   checkBeforRes(next, req, () => {
-    const { 
+    const {
       projectName,
       ...onter
     } = req.body
@@ -396,7 +423,7 @@ router.post('/publish', [
       ...onter,
       localPath: path.resolve(__dirname, `../builds/${projectName}`)
     }, () => new Result(null, 'publish success').success(res), () => new Result(null, 'publish error').fail(res))
-    
+
   })
 })
 

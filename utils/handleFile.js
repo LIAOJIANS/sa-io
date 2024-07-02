@@ -62,19 +62,19 @@ function rmdirRecursive(projectName) {
 
   const dirPath = path.resolve(__dirname, `../project/${projectName}`)
 
-  // const entries = fs.readFileSync(dirPath, { withFileTypes: true });  
+  const entries = fs.readFileSync(dirPath, { withFileTypes: true });  
   
-  // for (const entry of entries) {  
-  //   const fullPath = path.join(dirPath, entry.name);  
+  for (const entry of entries) {  
+    const fullPath = path.join(dirPath, entry.name);  
   
-  //   if (entry.isDirectory()) {  
-  //      rmdirRecursive(fullPath);  
-  //   } else {  
-  //      fs.unlinkSync(fullPath);  
-  //   }  
-  // }  
+    if (entry.isDirectory()) {  
+       rmdirRecursive(fullPath);  
+    } else {  
+       fs.unlinkSync(fullPath);  
+    }  
+  }  
   
-  fs.rmSync(dirPath, { recursive: true, force: true });  
+  // fs.rmSync(dirPath, { recursive: true, force: true });   // 低版本node不支持
 
 }
 

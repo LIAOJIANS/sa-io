@@ -32,6 +32,8 @@ export default defineComponent({
         shell: false,
         shellContent: '',
 
+        pull: false,
+
         publish: false,
         pubTargetIp: '',
         pubTargetProt: '',
@@ -117,6 +119,10 @@ export default defineComponent({
 
             <el-form-item label="Branch">
               <el-input v-model={state.formData.branch}></el-input>
+            </el-form-item>
+
+            <el-form-item label="is Pull">
+              <el-checkbox v-model={state.formData.pull}></el-checkbox>
             </el-form-item>
 
             <el-form-item label="is Shell：">

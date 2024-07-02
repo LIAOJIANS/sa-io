@@ -122,7 +122,7 @@ function installAfterBuildPro(projectName, filePath) {
 function gitPullPro(projectName) {
   return handleProcess({
     proName: 'git',
-    pro: ['pull'],
+    pro: ['fetch'],
     option: {
       cwd: cloneDir(projectName)
     }
