@@ -14,6 +14,7 @@ const {
   download,
   compressed,
   copyFile,
+  rmFile,
 
   gitPro,
   installAfterBuildPro,
@@ -21,6 +22,7 @@ const {
   gitCheckoutPro,
   shellPro,
   gitPullPro,
+  rmDir,
 
   Result,
 } = require('../utils');
@@ -183,7 +185,16 @@ router.post('/build', [
 ], (req, res, next) => {
   checkBeforRes(next, req, async () => {
 
-    const { shell, install, shellContent, branch, projectName, isPull, ...onter } = req.body
+    const { 
+      shell, 
+      install, 
+      removeNm, 
+      shellContent, 
+      branch, 
+      projectName, 
+      pull, 
+      ...onter 
+    } = req.body
 
     if (os.platform() !== 'linux' && shell) {
       return new Result(null, 'Running shell scripts must be in a Linux environment!!!')
@@ -225,6 +236,12 @@ router.post('/build', [
       true
     )
 
+    if(removeNm) {
+      await rmDir(projectName, 'node_modules') // 删除node_modules  防止不同分支不同版本的依赖冲突
+
+      rmFile(`${projectName}/package-lock.json`) // 删除安装依赖日志，防止版本缓存
+    }
+
     if (branch) { // 如果有分支，并且分支不能等于当前分支，否则切换分支并拉取最新
       const projects = getFileContentByName('projects')
 
@@ -232,6 +249,11 @@ router.post('/build', [
 
       if (project.branch !== branch) {
         try {
+          if(install) {
+
+            rmFile(`${projectName}/package-lock.json`) // 删除安装依赖日志，防止版本缓存
+          }
+
           await gitCheckoutPro(projectName, branch)
 
           setFileContentByName('projects', [
@@ -262,9 +284,9 @@ router.post('/build', [
           res.status(500).send( 'checkout error!!! Please review the log output!!!!!!')
         }
 
-      } else if(isPull) { // 拉取最新
+      } else if(pull) { // 拉取最新
         try {
-          await gitPullPro(projectName)
+          await gitPullPro(projectName, logPath)
         } catch(e) {
           res.status(500).send( 'checkout error!!! Please review the log output!!!!!!')
         }

@@ -70,12 +70,18 @@ function rmdirRecursive(projectName) {
     if (entry.isDirectory()) {  
        rmdirRecursive(fullPath);  
     } else {  
-       fs.unlinkSync(fullPath);  
+       fs.unlinkSync(fullPath)
     }  
   }  
   
   // fs.rmSync(dirPath, { recursive: true, force: true });   // 低版本node不支持
 
+}
+
+function rmFile(projectName) {
+  const fullPath = path.resolve(__dirname, `../project/${projectName}`)
+  
+  fs.unlinkSync(fullPath)
 }
 
 function download(success, error, path) {
@@ -134,5 +140,6 @@ module.exports = {
   rmdirRecursive,
   download,
   compressed,
-  copyFile
+  copyFile,
+  rmFile
 }

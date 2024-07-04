@@ -25,6 +25,7 @@ export default defineComponent({
 
     const state = reactive({
       formData: {
+        removeNm: true,
         install: true,
 
         branch: props.branch,
@@ -32,7 +33,7 @@ export default defineComponent({
         shell: false,
         shellContent: '',
 
-        pull: false,
+        pull: true,
 
         publish: false,
         pubTargetIp: '',
@@ -86,6 +87,12 @@ export default defineComponent({
         
       },
 
+      removeNm: () => {
+        if(state.formData.removeNm) {
+          state.formData.install = true
+        }
+      },
+
       getShellContent: () => {
         if (state.formData.shell) {
           apiGetShellContent<string>(props.projectName!)
@@ -111,10 +118,14 @@ export default defineComponent({
 
           before-close={handler.closeDialog}
         >
-          <el-form ref={ onRef.form } model={state.formData} label-width={140} rules={state.rules} style={{ width: '700px' }}>
+          <el-form ref={ onRef.form } model={state.formData} label-width={180} rules={state.rules} style={{ width: '700px' }}>
+
+          <el-form-item label="remove node_modules">
+              <el-checkbox v-model={state.formData.removeNm} onChange={ handler.removeNm }></el-checkbox>
+            </el-form-item>
 
             <el-form-item label="is Install：">
-              <el-checkbox v-model={state.formData.install}></el-checkbox>
+              <el-checkbox v-model={state.formData.install} onChange={ handler.removeNm }></el-checkbox>
             </el-form-item>
 
             <el-form-item label="Branch">

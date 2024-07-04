@@ -119,13 +119,14 @@ function installAfterBuildPro(projectName, filePath) {
   })
 }
 
-function gitPullPro(projectName) {
+function gitPullPro(projectName, filePath) {
   return handleProcess({
     proName: 'git',
-    pro: ['fetch'],
+    pro: ['pull', '--verbos'],
     option: {
       cwd: cloneDir(projectName)
-    }
+    },
+    filePath
   })
 }
 
@@ -149,6 +150,17 @@ function gitCheckoutPro(projectName, branch) {
   })
 }
 
+function rmDir(projectName, reName) {
+
+  return handleProcess({
+    proName: 'rm',
+    pro: ['-rf', reName],
+    option: {
+      cwd: cloneDir(projectName)
+    }
+  })
+}
+
 module.exports = {
   gitPro,
   shellPro,
@@ -157,5 +169,6 @@ module.exports = {
   installPro,
   installAfterBuildPro,
   gitPullPro,
-  gitCheckoutPro
+  gitCheckoutPro,
+  rmDir
 }

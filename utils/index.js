@@ -8,7 +8,8 @@ const {
   rmdirRecursive,
   download,
   compressed,
-  copyFile
+  copyFile,
+  rmFile
 } = require('./handleFile')
 
 const {
@@ -18,7 +19,8 @@ const {
   installPro,
   installAfterBuildPro,
   gitPullPro,
-  gitCheckoutPro
+  gitCheckoutPro,
+  rmDir
 } = require('./processFlow')
 
 function checkBeforRes(
@@ -53,6 +55,7 @@ module.exports = {
   download,
   compressed,
   copyFile,
+  rmFile,
   
   gitPullPro,
   gitPro,
@@ -61,6 +64,7 @@ module.exports = {
   installPro,
   installAfterBuildPro,
   gitCheckoutPro,
+  rmDir,
 
   Result
 }
