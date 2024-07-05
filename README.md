@@ -29,6 +29,14 @@ SaIo是一款专注于前端打包的IO流项目，前端使用 Vue3 + Element P
 ![](./.images/build.gif)
 ![](./.images/history.gif)
 
+## git token的获取
+### GitLab
+按下图操作创建令牌，并保存至项目的gitToken种即可拉取私人项目
+![](./.images/gitlab.jpg)
+### GitHub
+操作类似
+  
+
 ## 版权说明
 
 本项目使用 `MIT协议`，默认授权给任何人，被授权人可免费地无限制的使用、复制、修改、合并、发布、发行、再许可、售卖本软件拷贝、并有权向被供应人授予同等的权利，但必须满足以下条件:
