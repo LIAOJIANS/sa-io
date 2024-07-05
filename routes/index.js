@@ -137,14 +137,6 @@ router.delete(
     checkBeforRes(next, req, () => {
       const { projectName } = req.query
 
-      const data = getFileContentByName('projects', [])
-
-      setFileContentByName(
-        'projects',
-        data.filter(p => p.projectName !== projectName),
-        true
-      )
-
       if (os.platform() === 'linux') { // 如果是linux系统执行rm -rf， 删除速度快
 
         rmdirRecursive(projectName) // rm -rf 太危险，考虑换node的rm方法
@@ -152,6 +144,14 @@ router.delete(
 
         rmdirRecursive(projectName)
       }
+      
+      const data = getFileContentByName('projects', [])
+
+      setFileContentByName(
+        'projects',
+        data.filter(p => p.projectName !== projectName),
+        true
+      )
 
       new Result(null, 'delete success!!').success(res)
 
