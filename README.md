@@ -19,15 +19,14 @@ SaIo是一款专注于前端打包的IO流项目，前端使用 Vue3 + Element P
 - 🆒 UI使用 **Vue3** 主流最新技术栈: `Vue3`
 - 🍇 使用 **node**框架: `Express`，优雅、轻量、易用
 - ⚡️ 开箱即用，`window`和`linux`均支持运行
-- 🍍 集成 `Pinia` 状态管理，支持状态持久化
 - 🤹 基于`child_process`，自定义打包工作流，支持多线程打包，支持自定义`shell`脚本
 - 🎨 使用 `Element Plus`，极致简洁的代码风格和清爽的页面设计，审美在线
 - 🚀 使用 `scp2 + ssh2`, 实现一键打包推送至目标服务器，方便又易懂 
 - 🍒 `独特的路由设定`，自定义路由，利用`window.location`特性，实现部分`router`功能
 
 ## 极简的UI
-![]('./.images/build.gif')
-![]('./.images/history.gif')
+![](./.images/build.gif)
+![](./.images/history.gif)
 
 ## 版权说明
 
