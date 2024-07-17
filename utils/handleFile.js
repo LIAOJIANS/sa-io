@@ -80,8 +80,14 @@ function rmdirRecursive(projectName) {
 
 function rmFile(projectName) {
   const fullPath = path.resolve(__dirname, `../project/${projectName}`)
+
+  try {
+    fs.statSync(fullPath)
   
-  fs.unlinkSync(fullPath)
+    fs.unlinkSync(fullPath)
+  } catch(e) {
+
+  }
 }
 
 function download(success, error, path) {
