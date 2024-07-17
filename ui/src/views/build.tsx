@@ -1,9 +1,10 @@
 import { defineComponent, reactive } from 'vue'
 import { ElMessage, ElForm } from 'element-plus'
 
-import { getShellContent as apiGetShellContent, build } from '../api'
+import { getShellContent as apiGetShellContent, build, getPublishList, publish } from '../api'
 import LogDialog from './logDialog'
 import useRefs from "../hooks/useRefs";
+import { PublishItem } from './publishConfig';
 
 export default defineComponent({
 
@@ -40,30 +41,53 @@ export default defineComponent({
         pubTargetProt: '',
         pubTargetDir: '',
         pubTargetUser: '',
-        pubTargetPwd: ''
+        pubTargetPwd: '',
+
+        publishId: ''
       },
+
+      publishList: [],
 
       rules: {
         branch: [{ required: true, message: 'Please enter the branch', trigger: 'change' }],
         shellContent: [{ required: true, message: 'Please enter the shell content', trigger: 'change' }],
-        pubTargetIp: [{ required: true, message: 'Please enter the target ip', trigger: 'change' }],
-        pubTargetProt: [{ required: true, message: 'Please enter the target port', trigger: 'change' }],
-        pubTargetDir: [{ required: true, message: 'Please enter the target dir', trigger: 'change' }],
-        pubTargetUser: [{ required: true, message: 'Please enter the target user', trigger: 'change' }],
-        pubTargetPwd: [{ required: true, message: 'Please enter the target pwd', trigger: 'change' }],
+        publishId: [{ required: true, message: 'Please select publish info', trigger: 'change' }],
       },
-      
+
       logProjectName: '',
       dialogFormVisible: false
     })
 
     const handler = {
+      getPublishList: () => {
+        getPublishList<[]>()
+          .then(res => {
+            state.publishList = res.data.content || []
+          })
+      },
+
       closeDialog: () => {
         emit('closeDialog')
       },
 
       closeLogDialog: () => {
         state.dialogFormVisible = false
+      },
+
+      publishChange: () => {
+        if (state.formData.publish && state.formData.publishId) {
+          const {
+            id,
+            describe,
+            ...right
+          } = state.publishList.find((c: PublishItem) => c.id === state.formData.publishId) || {} as PublishItem
+
+          state.formData = {
+            ...state.formData,
+            ...right
+          }
+
+        }
       },
 
       build: () => {
@@ -78,17 +102,17 @@ export default defineComponent({
                   type: 'success',
                   message: res.data.message
                 })
-    
+
                 state.logProjectName = res.data.content
                 state.dialogFormVisible = true
               })
           }
         })
-        
+
       },
 
       removeNm: () => {
-        if(state.formData.removeNm) {
+        if (state.formData.removeNm) {
           state.formData.install = true
         }
       },
@@ -118,14 +142,14 @@ export default defineComponent({
 
           before-close={handler.closeDialog}
         >
-          <el-form ref={ onRef.form } model={state.formData} label-width={180} rules={state.rules} style={{ width: '700px' }}>
+          <el-form ref={onRef.form} model={state.formData} label-width={180} rules={state.rules} style={{ width: '700px' }}>
 
-          <el-form-item label="remove node_modules">
-              <el-checkbox v-model={state.formData.removeNm} onChange={ handler.removeNm }></el-checkbox>
+            <el-form-item label="remove node_modules">
+              <el-checkbox v-model={state.formData.removeNm} onChange={handler.removeNm}></el-checkbox>
             </el-form-item>
 
             <el-form-item label="is Install：">
-              <el-checkbox v-model={state.formData.install} onChange={ handler.removeNm }></el-checkbox>
+              <el-checkbox v-model={state.formData.install} onChange={handler.removeNm}></el-checkbox>
             </el-form-item>
 
             <el-form-item label="Branch">
@@ -150,27 +174,27 @@ export default defineComponent({
             }
 
             <el-form-item label="is Publish：">
-              <el-checkbox v-model={state.formData.publish}></el-checkbox>
+              <el-checkbox v-model={state.formData.publish} onChange={handler.getPublishList}></el-checkbox>
             </el-form-item>
             {
               state.formData.publish && (
-              <>
-                <el-form-item label="publish IP：" prop="pubTargetIp">
-                  <el-input v-model={state.formData.pubTargetIp}></el-input>
-                </el-form-item>
-                <el-form-item label="publish Port：" prop="pubTargetProt">
-                  <el-input v-model={state.formData.pubTargetProt}></el-input>
-                </el-form-item>
-                <el-form-item label="publish Dir：" prop="pubTargetDir">
-                  <el-input v-model={state.formData.pubTargetDir}></el-input>
-                </el-form-item>
-                <el-form-item label="publish User：" prop="pubTargetUser">
-                  <el-input v-model={state.formData.pubTargetUser}></el-input>
-                </el-form-item>
-                <el-form-item label="publish Pwd：" prop="pubTargetPwd">
-                  <el-input v-model={state.formData.pubTargetPwd}></el-input>
-                </el-form-item>
-              </>
+                <>
+                  <el-form-item label="publish IP：" prop="publishId">
+                    <el-select
+                      v-model={state.formData.publishId} 
+                      filterable 
+                      clearable 
+                      onChange={handler.publishChange}
+                      style={{  }}
+                    >
+                      {
+                        state.publishList.map((item: PublishItem) => (
+                          <el-option key={item.id} label={item.describe} value={item.id}></el-option>
+                        ))
+                      }
+                    </el-select>
+                  </el-form-item>
+                </>
               )
             }
           </el-form>
@@ -178,10 +202,10 @@ export default defineComponent({
 
         {
           state.dialogFormVisible && (
-            <LogDialog 
-              dialogFormVisible={ state.dialogFormVisible }
-              projectName={ state.logProjectName }
-              onCloseDialog={ handler.closeLogDialog }
+            <LogDialog
+              dialogFormVisible={state.dialogFormVisible}
+              projectName={state.logProjectName}
+              onCloseDialog={handler.closeLogDialog}
             />
           )
         }

@@ -1,18 +1,19 @@
-import { defineComponent, reactive } from "vue";
+import { defineComponent, onMounted, reactive } from "vue";
 import { ElForm, ElMessage } from "element-plus";
 
 import useRefs from "../hooks/useRefs";
-import { publish } from '../api'
+import { publish, savePublishList, getPublishById } from '../api'
 
 export default defineComponent({
 
   props: {
     dialogFormVisible: { type: Boolean, default: false },
-    projectName: { type: String }
+    curId: { type: [ String, Number ] }
   },
 
   emits: {
-    closeDialog: () => true
+    closeDialog: () => true,
+    fetchData: () => true
   },
 
   setup(props, { emit }) {
@@ -25,6 +26,7 @@ export default defineComponent({
       loading: false,
 
       formData: {
+        describe: '',
         pubTargetIp: '',
         pubTargetProt: '',
         pubTargetDir: '',
@@ -32,6 +34,7 @@ export default defineComponent({
         pubTargetPwd: '',
       },
       rules: {
+        describe: [{ required: true, message: 'Please enter the describe', trigger: 'change' }],
         pubTargetIp: [{ required: true, message: 'Please enter the target ip', trigger: 'change' }],
         pubTargetProt: [{ required: true, message: 'Please enter the target port', trigger: 'change' }],
         pubTargetDir: [{ required: true, message: 'Please enter the target dir', trigger: 'change' }],
@@ -49,15 +52,13 @@ export default defineComponent({
         refs.form?.validate(fild => {
           if (fild === true) {
             state.loading = true
-            publish({
-              ...state.formData,
-              projectName: props.projectName
-            })
+            
+            savePublishList(state.formData)
               .then(res => {
                 ElMessage({ message: 'success!!', type: 'success' })
                 state.loading = false
 
-                handler.closeDialog()
+                emit('fetchData')
               })
               .catch(() => (state.loading = false))
           }
@@ -65,14 +66,28 @@ export default defineComponent({
       }
     }
 
+    onMounted(() => {
+      props.curId && (
+        state.loading = true,
+        getPublishById<Record<string, string>>(props.curId)
+          .then(res => {
+            state.loading = false
+
+            ;(state.formData as any) = res.data.content || {}
+            
+          })
+          .catch(() => (state.loading = false))
+      )
+    })
+
     return () => (
-      <el-dialog v-model={props.dialogFormVisible} title={ `Publish ${props.projectName}` } width="750px" top="5vh"
+      <el-dialog v-model={props.dialogFormVisible} title={ `Publish Info` } width="750px" top="5vh"
         before-close={handler.closeDialog}
         v-slots={{
           footer: () => <>
             <div class="dialog-footer">
               <el-button onClick={handler.closeDialog}>Cancel</el-button>
-              <el-button type="primary" onClick={handler.submit}>Publish</el-button>
+              <el-button type="primary" onClick={handler.submit}>Save</el-button>
             </div>
           </>
         }}
@@ -85,6 +100,9 @@ export default defineComponent({
           style={{ width: '600px' }}
           ref={onRef.form}
         >
+        <el-form-item label="Describe" prop="describe">
+          <el-input v-model={state.formData.describe} clearable />
+        </el-form-item>
           <el-form-item label="Publish Target Ip" prop="pubTargetIp">
             <el-input v-model={state.formData.pubTargetIp} clearable />
           </el-form-item>

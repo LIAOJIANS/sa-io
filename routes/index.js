@@ -144,7 +144,7 @@ router.delete(
 
         rmdirRecursive(projectName)
       }
-      
+
       const data = getFileContentByName('projects', [])
 
       setFileContentByName(
@@ -185,15 +185,15 @@ router.post('/build', [
 ], (req, res, next) => {
   checkBeforRes(next, req, async () => {
 
-    const { 
-      shell, 
-      install, 
-      removeNm, 
-      shellContent, 
-      branch, 
-      projectName, 
-      pull, 
-      ...onter 
+    const {
+      shell,
+      install,
+      removeNm,
+      shellContent,
+      branch,
+      projectName,
+      pull,
+      ...onter
     } = req.body
 
     if (os.platform() !== 'linux' && shell) {
@@ -236,7 +236,7 @@ router.post('/build', [
       true
     )
 
-    if(removeNm) {
+    if (removeNm) {
       await rmDir(projectName, 'node_modules') // 删除node_modules  防止不同分支不同版本的依赖冲突
 
       rmFile(`${projectName}/package-lock.json`) // 删除安装依赖日志，防止版本缓存
@@ -249,7 +249,7 @@ router.post('/build', [
 
       if (project.branch !== branch) {
         try {
-          if(install) {
+          if (install) {
 
             rmFile(`${projectName}/package-lock.json`) // 删除安装依赖日志，防止版本缓存
           }
@@ -267,6 +267,8 @@ router.post('/build', [
           ], true)
         } catch (e) {
 
+          console.log(e)
+
           setFileContentByName(
             'history',
             [
@@ -281,14 +283,14 @@ router.post('/build', [
             true
           )
 
-          res.status(500).send( 'checkout error!!! Please review the log output!!!!!!')
+          res.status(500).send('checkout error!!! Please review the log output!!!!!!')
         }
 
-      } else if(pull) { // 拉取最新
+      } else if (pull) { // 拉取最新
         try {
           await gitPullPro(projectName, logPath)
-        } catch(e) {
-          res.status(500).send( 'checkout error!!! Please review the log output!!!!!!')
+        } catch (e) {
+          res.status(500).send('checkout error!!! Please review the log output!!!!!!')
         }
       }
     }
@@ -446,6 +448,69 @@ router.post('/publish', [
       localPath: path.resolve(__dirname, `../builds/${projectName}`)
     }, () => new Result(null, 'publish success').success(res), () => new Result(null, 'publish error').fail(res))
 
+  })
+})
+
+router.post('/create_publish', [
+  (() =>
+    ['pubTargetIp', 'pubTargetProt', 'pubTargetDir', 'pubTargetUser', 'pubTargetPwd', 'describe'].map((fild) =>
+      body(fild)
+        .notEmpty()
+        .withMessage('someing is null'),
+    ))(),
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+    const data = getFileContentByName('publishList', [])
+
+    setFileContentByName(
+      'publishList',
+      [
+        ...data,
+        {
+          id: Date.now(),
+          ...req.body
+        }
+      ],
+      true
+    )
+
+    new Result(null, 'create publish success!!').success(res)
+  })
+})
+
+router.post('/get_publish_list', (req, res, next) => {
+  checkBeforRes(next, req, () => {
+
+    const data = getFileContentByName('publishList', [])
+    new Result(data).success(res)
+  })
+})
+
+router.get('/get_publish_item_by_id', [
+  query('id').notEmpty().withMessage('id is null!!!')
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+    const { id } = req.query
+    const data = getFileContentByName('publishList', [])
+
+    new Result(data.find(item => item.id == id) || {}).success(res)
+  })
+})
+
+router.delete('/delete_publish', [
+  query('id').notEmpty().withMessage('id is null!!!')
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+    const { id } = req.query
+    const data = getFileContentByName('publishList', [])
+
+    setFileContentByName(
+      'publishList',
+      data.filter(item => item.id != id),
+      true
+    )
+
+    new Result(null, 'delete publish success!!').success(res)
   })
 })
 

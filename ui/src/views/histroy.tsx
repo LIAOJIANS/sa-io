@@ -2,10 +2,11 @@ import { defineComponent, onMounted, reactive } from "vue"
 import { dateFormat } from 'js-hodgepodge'
 import { ElMessage } from 'element-plus'
 
-import { getHistroys, download } from '../api'
+import { getHistroys, download, getPublishList, publish } from '../api'
 import { download as dow } from '../utils/download'
 import LogDialog from "./logDialog"
 import PublishDialog from "./publishDialog"
+import { PublishItem } from "./publishConfig"
 
 export default defineComponent({
   setup() {
@@ -16,7 +17,9 @@ export default defineComponent({
       publishDialogVisible: false,
       currentName: '',
       collapse: [],
-      loading: false
+      loading: false,
+      publishList: [],
+      publishId: ''
     } as {
       historys: {
         buildTime: number,
@@ -28,10 +31,20 @@ export default defineComponent({
       publishDialogVisible: boolean,
       currentName: string,
       collapse: string[],
-      loading: boolean
+      loading: boolean,
+      publishList: PublishItem[],
+      publishId: string
     })
 
     const handler = {
+
+      getPublishList: () => {
+        getPublishList<[]>()
+          .then(res => {
+            state.publishList = res.data.content || []
+          })
+      },
+
       handleChange: () => {
 
       },
@@ -43,7 +56,23 @@ export default defineComponent({
 
       publish: (name: string) => {
         state.currentName = name
-        state.publishDialogVisible = true
+
+        const {
+          id,
+          describe,
+          ...right
+        } = state.publishList.find((c: PublishItem) => c.id === state.publishId) || {} as PublishItem
+
+        publish({
+          ...right,
+          projectName: name
+        })
+          .then(res => {
+            ElMessage({ message: 'success!!', type: 'success' })
+            state.loading = false
+
+          })
+          .catch(() => (state.loading = false))
       },
 
       download: (row: { buildTime: number, projectName: string, status: string }) => {
@@ -114,9 +143,33 @@ export default defineComponent({
                 <el-descriptions-item label="product">
                   <el-link type="primary" onClick={() => handler.download(c)}>download</el-link>
                 </el-descriptions-item>
-                <el-descriptions-item label="">
-                  <el-button type="primary" onClick={() => handler.publish(`${c.projectName}-${c.buildTime}`)}>publish</el-button>
-                </el-descriptions-item>
+                {
+                  c.status === 'success' && (
+                    <el-descriptions-item label="">
+                      <el-popover trigger="click" placement="top" width="300" v-slots={{
+                        reference: () => <el-button type="primary" onClick={handler.getPublishList}>publish</el-button>
+                      }}>
+                        <p>Are you sure to publish this?</p>
+                        <el-select
+                          v-model={state.publishId}
+                          filterable
+                          clearable
+                        >
+                          {
+                            state.publishList.map((item: PublishItem) => (
+                              <el-option key={item.id} label={item.describe} value={item.id}></el-option>
+                            ))
+                          }
+                        </el-select>
+                        <div style="text-align: right; margin-top: 20px">
+                          <el-button size="small" type="primary" onClick={() => handler.publish(`${c.projectName}-${c.buildTime}`)} >
+                            confirm
+                          </el-button>
+                        </div>
+                      </el-popover>
+                    </el-descriptions-item>
+                  )
+                }
               </el-descriptions>
             </el-collapse-item>
           ))
@@ -133,7 +186,7 @@ export default defineComponent({
         )
       }
 
-      {
+      {/* {
         state.publishDialogVisible && (
           <PublishDialog
             projectName={state.currentName}
@@ -141,7 +194,7 @@ export default defineComponent({
             onCloseDialog={() => state.publishDialogVisible = false}
           />
         )
-      }
+      } */}
     </div>
   }
 })

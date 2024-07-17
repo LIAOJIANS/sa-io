@@ -29,3 +29,14 @@ export const download =
 
 export const publish = 
   <T>(data: any) => request<T>({ url: '/publish', method: 'post', data })
+
+export const getPublishList = <T>() => request<T>({ url: '/get_publish_list', method: 'post' })
+
+export const savePublishList = 
+  <T>(data: any) => request<T>({ url: '/create_publish', method: 'post', data })
+
+export const deletePublis = 
+  <T>(id: any) => request<T>({ url: `/delete_publish?id=${id}`, method: 'delete' })
+
+export const getPublishById = 
+  <T>(id: any) => request<T>({ url: `/get_publish_item_by_id?id=${id}` })

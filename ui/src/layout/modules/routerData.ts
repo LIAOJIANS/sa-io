@@ -21,7 +21,9 @@ const routes: IRoutesData[] = [
     childrens: [
       { name: 'Project List', title: '项目列表', page: '/list'},
       // { name: 'Build', title: '构建项目', page: '/build'},
-      { name: 'Histroy', title: '历史', page: '/histroy'}
+      { name: 'Histroy', title: '历史', page: '/histroy'},
+      { name: 'Publish Config', title: '推送列表', page: '/publishConfig'},
+
     ]
   },
   {
