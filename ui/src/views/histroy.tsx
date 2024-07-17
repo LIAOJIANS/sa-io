@@ -108,10 +108,10 @@ export default defineComponent({
                   <el-tag size="small" type={c.status === 'success' ? 'success' : 'danger'}>{c.status}</el-tag>
                 </el-descriptions-item>
                 <el-descriptions-item label="">
-                  <el-button type="primary" onClick={() => handler.viewLog(`${c.projectName}-${c.buildTime}`)}>view log</el-button>
+                  <el-button type="primary" onClick={() => handler.viewLog(`${c.projectName}-${c.buildTime}`)}>log</el-button>
                 </el-descriptions-item>
                 <el-descriptions-item label="Branch"><span style={{ fontWeight: 'bold' }}>{c.branch}</span></el-descriptions-item>
-                <el-descriptions-item label="product download">
+                <el-descriptions-item label="product">
                   <el-link type="primary" onClick={() => handler.download(c)}>download</el-link>
                 </el-descriptions-item>
                 <el-descriptions-item label="">
