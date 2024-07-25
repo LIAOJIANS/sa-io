@@ -1,7 +1,8 @@
 import { defineComponent, onMounted, reactive } from 'vue'
 
-import { getPublishList } from '../api'
+import { getPublishList, deletePublis } from '../api'
 import PublishDialog from './publishDialog'
+import { ElMessage } from 'element-plus'
 
 export type PublishItem = Record<string, string>
 
@@ -23,7 +24,15 @@ export default defineComponent({
       },
 
       delete: (id: string | number) => {
+        state.loading = true
+        deletePublis(id)
+          .then(res => {
 
+            ElMessage({ message: 'success!!', type: 'success' })
+            state.loading = false
+            methods.fetchData()
+            
+          }).catch(() => state.loading = false)
       },
 
       add: () => {
