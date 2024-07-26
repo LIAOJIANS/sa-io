@@ -139,7 +139,7 @@ router.delete(
 
       if (os.platform() === 'linux') { // 如果是linux系统执行rm -rf， 删除速度快
 
-        rmdirRecursive(projectName) // rm -rf 太危险，考虑换node的rm方法
+        rmDir('project', projectName) // rm -rf 太危险，考虑换node的rm方法
       } else { // 其他系统则用fs.rm删除，稍慢
 
         rmdirRecursive(projectName)
