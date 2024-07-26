@@ -58,9 +58,9 @@ function setFileContentByName(
   )
 }
 
-function rmdirRecursive(projectName) {
+function rmdirRecursive(projectName, diyPath) {
 
-  const dirPath = path.resolve(__dirname, `../project/${projectName}`)
+  const dirPath = path.resolve(__dirname, `../${diyPath || 'project'}/${projectName}`)
 
   const entries = fs.readFileSync(dirPath, { withFileTypes: true });  
   
@@ -68,7 +68,7 @@ function rmdirRecursive(projectName) {
     const fullPath = path.join(dirPath, entry.name);  
   
     if (entry.isDirectory()) {  
-       rmdirRecursive(fullPath);  
+       rmdirRecursive(fullPath, diyPath);  
     } else {  
        fs.unlinkSync(fullPath)
     }  

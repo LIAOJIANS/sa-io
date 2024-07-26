@@ -2,16 +2,17 @@ import { defineComponent, onMounted, reactive } from 'vue';
 import { dateFormat } from 'js-hodgepodge';
 import { ElMessage } from 'element-plus';
 
-import { getHistroys, download, getPublishList, publish } from '../api';
+import { getHistroys, download, getPublishList, publish, getProjects, deleteHistory } from '../api';
 import { download as dow } from '../utils/download';
 import LogDialog from './logDialog';
-import PublishDialog from './publishDialog';
+
 import { PublishItem } from './publishConfig';
 
 export default defineComponent({
   setup() {
     const state = reactive({
       historys: [],
+      soureHistory: [],
       logDialogVisible: false,
       publishDialogVisible: false,
       currentName: '',
@@ -19,13 +20,22 @@ export default defineComponent({
       loading: false,
       publishList: [],
       publishId: '',
+      delTimes: [],
+      projects: [],
+      searchProjectName: ''
     } as {
       historys: {
         buildTime: number;
         projectName: string;
         status: string;
         branch: string;
-      }[];
+      }[]
+      soureHistory: {
+        buildTime: number;
+        projectName: string;
+        status: string;
+        branch: string;
+      }[]
       logDialogVisible: boolean;
       publishDialogVisible: boolean;
       currentName: string;
@@ -33,7 +43,40 @@ export default defineComponent({
       loading: boolean;
       publishList: PublishItem[];
       publishId: string;
+      delTimes: number[];
+      projects: Record<string, string>[],
+      searchProjectName: string
     });
+
+    const shortcuts = [
+      {
+        text: 'Last week',
+        value: () => {
+          const end = new Date()
+          const start = new Date()
+          start.setDate(start.getDate() - 7)
+          return [start, end]
+        },
+      },
+      {
+        text: 'Last month',
+        value: () => {
+          const end = new Date()
+          const start = new Date()
+          start.setMonth(start.getMonth() - 1)
+          return [start, end]
+        },
+      },
+      {
+        text: 'Last 3 months',
+        value: () => {
+          const end = new Date()
+          const start = new Date()
+          start.setMonth(start.getMonth() - 3)
+          return [start, end]
+        },
+      },
+    ]
 
     const handler = {
       getPublishList: () => {
@@ -42,7 +85,32 @@ export default defineComponent({
         });
       },
 
-      handleChange: () => {},
+      historySearch: () => {
+        let [starTime, endTime] = state.delTimes
+
+        if (starTime && endTime) {
+          starTime = new Date(starTime).getTime()
+          endTime = new Date(endTime).getTime()
+        }
+
+        state.historys = state.soureHistory.filter(c => {
+          if(!(starTime && endTime) && !state.searchProjectName) {
+            return true
+          }
+
+          if (!(starTime && endTime)) {
+            
+            return c.projectName === state.searchProjectName
+          }
+
+          if (!state.searchProjectName) {
+            return c.buildTime >= starTime && c.buildTime <= endTime
+          }
+
+          return c.projectName === state.searchProjectName && c.buildTime >= starTime && c.buildTime <= endTime
+        })
+        
+      },
 
       viewLog: (name: string) => {
         state.logDialogVisible = true;
@@ -51,14 +119,14 @@ export default defineComponent({
 
       publish: (name: string) => {
         state.loading = true
-        
+
         state.currentName = name;
 
         const { id, describe, ...right } =
           state.publishList.find(
             (c: PublishItem) => c.id === state.publishId,
           ) || ({} as PublishItem);
-        
+
         publish({
           ...right,
           projectName: name,
@@ -95,7 +163,22 @@ export default defineComponent({
           })
           .catch(() => (state.loading = false));
       },
-    };
+
+      deletHistory: () => {
+        state.loading = true;
+        deleteHistory(
+          state.historys.map(c => ({
+            ...c,
+            projectName: `${c.projectName}-${c.buildTime}`,
+          }))
+        )
+          .then((res) => {
+            ElMessage({ message: 'success!!', type: 'success' });
+            state.loading = false;
+          })
+          .catch(() => (state.loading = false));
+      }
+    }
 
     onMounted(() => {
       state.loading = true;
@@ -110,7 +193,7 @@ export default defineComponent({
         ]
       >()
         .then((res) => {
-          state.historys = (res.data.content || []).sort(
+          state.historys = state.soureHistory = (res.data.content || []).sort(
             (a, b) => b.buildTime - a.buildTime,
           );
 
@@ -121,11 +204,40 @@ export default defineComponent({
           state.loading = false;
         })
         .catch(() => (state.loading = false));
+
+      getProjects<[]>()
+        .then((res) => {
+
+          state.projects = res.data.content || [];
+
+        })
     });
 
     return () => (
       <div v-loading={state.loading}>
-        <el-collapse onChange={handler.handleChange} v-model={state.collapse}>
+        <div style={{ marginBottom: '20px' }}>
+          <el-date-picker
+            v-model={state.delTimes}
+            type="daterange"
+            shortcuts={shortcuts}
+            range-separator="至"
+            start-placeholder="开始日期"
+            clearable
+            end-placeholder="结束日期">
+          </el-date-picker>
+
+          <el-select v-model={state.searchProjectName} style={{ width: '350px' }} clearable>
+            {
+              state.projects.map((c) => <el-option label={c.projectName} value={c.projectName}></el-option>)
+            }
+          </el-select>
+
+
+          <el-button type="primary" style={{ marginLeft: '20px' }} onClick={handler.historySearch}>Search</el-button>
+          <el-button type="danger" onClick={handler.deletHistory}>Delete</el-button>
+        </div>
+
+        <el-collapse v-model={state.collapse}>
           {state.historys.map((c) => (
             <el-collapse-item
               v-slots={{

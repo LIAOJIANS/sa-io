@@ -161,6 +161,17 @@ function rmDir(projectName, reName) {
   })
 }
 
+function rmRf(reName, projectName) {
+
+  return handleProcess({
+    proName: 'rm',
+    pro: ['-rf', projectName],
+    option: {
+      cwd: path.resolve(__dirname, `../${reName}`)
+    }
+  })
+}
+
 module.exports = {
   gitPro,
   shellPro,
@@ -170,5 +181,6 @@ module.exports = {
   installAfterBuildPro,
   gitPullPro,
   gitCheckoutPro,
-  rmDir
+  rmDir,
+  rmRf
 }

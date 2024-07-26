@@ -20,7 +20,8 @@ const {
   installAfterBuildPro,
   gitPullPro,
   gitCheckoutPro,
-  rmDir
+  rmDir,
+  rmRf
 } = require('./processFlow')
 
 function checkBeforRes(
@@ -65,6 +66,7 @@ module.exports = {
   installAfterBuildPro,
   gitCheckoutPro,
   rmDir,
+  rmRf,
 
   Result
 }

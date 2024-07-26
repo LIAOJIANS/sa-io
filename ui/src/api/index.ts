@@ -40,3 +40,6 @@ export const deletePublis =
 
 export const getPublishById = 
   <T>(id: any) => request<T>({ url: `/get_publish_item_by_id?id=${id}` })
+
+export const deleteHistory = 
+  <T>(projects: any) => request<T>({ url: '/delete_ass_history', method: 'post', data: { projects } })

@@ -23,6 +23,7 @@ const {
   shellPro,
   gitPullPro,
   rmDir,
+  rmRf,
 
   Result,
 } = require('../utils');
@@ -139,7 +140,7 @@ router.delete(
 
       if (os.platform() === 'linux') { // 如果是linux系统执行rm -rf， 删除速度快
 
-        rmDir('project', projectName) // rm -rf 太危险，考虑换node的rm方法
+        rmRf('project', projectName) // rm -rf 太危险，考虑换node的rm方法
       } else { // 其他系统则用fs.rm删除，稍慢
 
         rmdirRecursive(projectName)
@@ -405,6 +406,52 @@ router.get('/get_history', (req, res, next) => {
   const data = getFileContentByName('history', [])
 
   new Result(data).success(res)
+})
+
+router.post('/delete_ass_history', [
+  (() =>
+    ['projects'].map((fild) =>
+      body(fild)
+        .notEmpty()
+        .withMessage('username or token is null'),
+  ))(),
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+    const { projects } = req.body
+
+    const history = getFileContentByName('history')
+
+    const filterHistory = []
+
+    const handleDelete = (func) => {
+      projects.forEach(c => {
+
+        func('builds', `${c.projectName}`) // 产物
+        func('builds', `${c.projectName}.zip`) // 压缩产物
+        func('log', `${c.projectName}.log`) // 产出日志
+
+        const his = history.find(h => h.id !== c.id)
+      
+        if(his) {
+          filterHistory.push(his)
+        }
+
+      })
+
+      // setFileContentByName(
+      //   'history',
+      //   filterHistory,
+      //   true
+      // )
+    }
+
+    handleDelete(
+      os.platform() === 'linux' ? rmRf : rmdirRecursive
+    )
+
+    new Result().success(res)
+
+  })
 })
 
 router.post('/download', [
