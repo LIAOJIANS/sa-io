@@ -86,20 +86,26 @@ export default defineComponent({
       },
 
       historySearch: () => {
-        let [starTime, endTime] = state.delTimes
+        let [starTime, endTime] = state.delTimes || []
 
         if (starTime && endTime) {
-          starTime = new Date(starTime).getTime()
-          endTime = new Date(endTime).getTime()
+
+          const date = (
+            timer?: number
+          ) => timer ? new Date(timer).getTime() : new Date().getTime()
+
+          starTime = date(starTime)
+
+          endTime = starTime === date(endTime) ? date() : date(endTime)
         }
 
         state.historys = state.soureHistory.filter(c => {
-          if(!(starTime && endTime) && !state.searchProjectName) {
+          if (!(starTime && endTime) && !state.searchProjectName) {
             return true
           }
 
           if (!(starTime && endTime)) {
-            
+
             return c.projectName === state.searchProjectName
           }
 
@@ -109,7 +115,7 @@ export default defineComponent({
 
           return c.projectName === state.searchProjectName && c.buildTime >= starTime && c.buildTime <= endTime
         })
-        
+
       },
 
       viewLog: (name: string) => {

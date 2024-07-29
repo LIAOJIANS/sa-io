@@ -438,11 +438,11 @@ router.post('/delete_ass_history', [
 
       })
 
-      // setFileContentByName(
-      //   'history',
-      //   filterHistory,
-      //   true
-      // )
+      setFileContentByName(
+        'history',
+        filterHistory,
+        true
+      )
     }
 
     handleDelete(
