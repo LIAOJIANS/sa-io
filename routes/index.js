@@ -509,15 +509,31 @@ router.post('/create_publish', [
   checkBeforRes(next, req, () => {
     const data = getFileContentByName('publishList', [])
 
+    const body = req.body
+
+    const getPublishItem = () => {
+      const item = data.find(c => c.id === body.id) || {}
+
+      return [
+        ...data.filter(c => c.id !== body.id),
+        {
+          ...item,
+          ...body
+        }
+      ]
+    }
+
+    const items = body.id ? getPublishItem() : [
+      ...data,
+      {
+        id: Date.now(),
+        ...body
+      }
+    ]
+
     setFileContentByName(
       'publishList',
-      [
-        ...data,
-        {
-          id: Date.now(),
-          ...req.body
-        }
-      ],
+      items,
       true
     )
 
