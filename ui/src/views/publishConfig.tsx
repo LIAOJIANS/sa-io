@@ -37,6 +37,7 @@ export default defineComponent({
 
       add: () => {
         state.dialogFormVisible = true
+        state.curId = ''
       }
     }
 
