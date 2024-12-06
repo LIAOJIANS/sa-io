@@ -55,7 +55,9 @@ export default defineComponent({
       },
 
       logProjectName: '',
-      dialogFormVisible: false
+      dialogFormVisible: false,
+
+      loading: false
     })
 
     const handler = {
@@ -93,11 +95,14 @@ export default defineComponent({
       build: () => {
         refs.form?.validate(fild => {
           if (fild === true) {
+            state.loading = true
+
             build<string>({
               ...state.formData,
               projectName: props.projectName!
             })
               .then(res => {
+                state.loading = false
                 ElMessage({
                   type: 'success',
                   message: res.data.message
@@ -106,6 +111,7 @@ export default defineComponent({
                 state.logProjectName = res.data.content
                 state.dialogFormVisible = true
               })
+              .catch(() => (state.loading = false))
           }
         })
 
@@ -142,7 +148,7 @@ export default defineComponent({
 
           before-close={handler.closeDialog}
         >
-          <el-form ref={onRef.form} model={state.formData} label-width={180} rules={state.rules} style={{ width: '700px' }}>
+          <el-form v-loading={ state.loading } ref={onRef.form} model={state.formData} label-width={180} rules={state.rules} style={{ width: '700px' }}>
 
             <el-form-item label="remove node_modules">
               <el-checkbox v-model={state.formData.removeNm} onChange={handler.removeNm}></el-checkbox>

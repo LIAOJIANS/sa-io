@@ -9,7 +9,9 @@ const {
   download,
   compressed,
   copyFile,
-  rmFile
+  rmFile,
+  zipFilePipe,
+  hasDirectory
 } = require('./handleFile')
 
 const {
@@ -20,6 +22,7 @@ const {
   installAfterBuildPro,
   gitPullPro,
   gitCheckoutPro,
+  gitReset,
   rmDir,
   rmRf
 } = require('./processFlow')
@@ -57,6 +60,8 @@ module.exports = {
   compressed,
   copyFile,
   rmFile,
+  gitReset,
+  hasDirectory,
   
   gitPullPro,
   gitPro,
@@ -67,6 +72,7 @@ module.exports = {
   gitCheckoutPro,
   rmDir,
   rmRf,
+  zipFilePipe,
 
   Result
 }

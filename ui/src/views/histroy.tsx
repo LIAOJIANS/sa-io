@@ -285,7 +285,7 @@ export default defineComponent({
                   <span style={{ fontWeight: 'bold' }}>{c.branch}</span>
                 </el-descriptions-item>
                 <el-descriptions-item label="product">
-                  <el-link type="primary" onClick={() => handler.download(c)}>
+                  <el-link type="primary" onClick={() => handler.download(c)} disabled={c.status !== 'success'} >
                     download
                   </el-link>
                 </el-descriptions-item>

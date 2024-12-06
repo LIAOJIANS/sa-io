@@ -54,11 +54,12 @@ function handleProcess(
 
 function gitPro(
   targetUrl,
-  projectName
+  projectName,
+  dir = 'project'
 ) {
   return handleProcess({
     proName: 'git',
-    pro: ['clone', targetUrl, cloneDir(projectName)],
+    pro: ['clone', targetUrl, cloneDir(projectName, dir)],
     setLog: false
   })
 }
@@ -79,38 +80,38 @@ function shellPro(
   )
 }
 
-function buildPro(projectName, filePath) {
+function buildPro(projectName, filePath, dir = 'project') {
   return handleProcess(
     {
       proName: `npm${platform() ? '.cmd' : ''}`,
       pro: ['run', 'build'],
       option: {  
-        cwd: cloneDir(`${projectName}`),
+        cwd: cloneDir(`${projectName}`, dir),
       },
       filePath
     }
   )
 }
 
-function installPro(projectName, filePath) {
+function installPro(projectName, filePath, dir = 'project') {
   return handleProcess(
     {
       proName: `npm${platform() ? '.cmd' : ''}`,
       pro: ['install'],
       option: {  
-        cwd: cloneDir(projectName),
+        cwd: cloneDir(projectName, dir),
       },
       filePath
     }
   )
 }
 
-function installAfterBuildPro(projectName, filePath) {
+function installAfterBuildPro(projectName, filePath, dir = 'project') {
   return new Promise(async (reslove, reject) => {
     try {
-      await installPro(projectName, filePath)
+      await installPro(projectName, filePath, dir)
 
-      buildPro(projectName, filePath)
+      buildPro(projectName, filePath, dir)
         .then(reslove)
         .catch(reject)
     } catch(e) {
@@ -130,20 +131,54 @@ function gitPullPro(projectName, filePath) {
   })
 }
 
-function gitCheckoutPro(projectName, branch) {
+function gitReset(
+  projectName, 
+  commitId, 
+  dir = 'project'
+) {
+  return new Promise(async (reslove, reject) => {
+    try {
+      await handleProcess({
+        proName: 'git',
+        pro: ['reset', commitId],
+        option: {
+          cwd: cloneDir(projectName, dir)
+        }
+      })
+      reslove()
+    } catch(e) {
+      reject()
+    }
+  })
+}
+
+function gitCheckoutPro(
+  projectName, 
+  branch,
+  dir = 'project',
+  reset = false,
+  commitId = ''
+) {
   return new Promise(async (reslove, reject) => {
     try {
       await handleProcess({
         proName: 'git',
         pro: ['checkout', branch],
         option: {
-          cwd: cloneDir(projectName)
+          cwd: cloneDir(projectName, dir)
         }
       })
 
+     if(reset) {
+      gitReset(projectName, commitId, dir)
+      .then(() => reslove())
+      .catch(() => reject())
+     } else {
       gitPullPro(projectName)
-        .then(() => reslove())
-        .catch(() => reject())
+      .then(() => reslove())
+      .catch(() => reject())
+     }
+
     } catch(e) {
       reject()
     }
@@ -177,6 +212,7 @@ module.exports = {
   shellPro,
   cloneDir,
   buildPro,
+  gitReset,
   installPro,
   installAfterBuildPro,
   gitPullPro,

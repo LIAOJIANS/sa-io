@@ -15,6 +15,8 @@ const {
   compressed,
   copyFile,
   rmFile,
+  zipFilePipe,
+  hasDirectory,
 
   gitPro,
   installAfterBuildPro,
@@ -92,8 +94,7 @@ router.post(
       // 根据projectName执行git工作流
       gitPro(
         gitTargetUrl,
-        projectName,
-        Date.now()
+        projectName
       ).then(() => {
 
         const data = getFileContentByName('projects', [])
@@ -366,6 +367,63 @@ router.post('/build', [
     )
   })
 })
+
+router.post('/shell_build', [
+  (() => ['projectName','branch','commitId','targetUrl']
+    .map((fild) => body(fild).notEmpty().withMessage('projectName;branch;commitId;targetUrl is null!!'))
+  )()
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+    try {
+      const { projectName, branch, commitId, targetUrl } = req.body
+
+      const filename = `${projectName}-${branch}-${commitId}`
+
+      const install = hasDirectory(path.resolve(__dirname, `../tags/${filename}/dist`))
+
+      res.set({
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': `attachment; filename=${filename}.zip`
+      })
+      
+      if(install) {
+        zipFilePipe(filename, res)
+
+      } else {
+        const { username, token } = getFileContentByName('gitToken')
+  
+        const [http, addr] = targetUrl.split('//')
+    
+        const gitTargetUrl = `${http}//${encodeURIComponent(username)}:${encodeURIComponent(token)}@${addr}`
+        
+          gitPro(
+            gitTargetUrl,
+            filename,
+            'tags'
+          ).then(() => {
+    
+            gitCheckoutPro(filename, branch, 'tags', true, commitId)
+              .then(() => {
+                installAfterBuildPro(filename, path.resolve(__dirname, `../tags/${filename}.log`), 'tags')
+                  .then(() => { // 压缩并暴露流
+
+                    zipFilePipe(filename, res)
+
+                  })
+                  .catch(() => new Result(null, 'error!!').fail(res))
+    
+              })
+          })
+        }
+      
+    
+      
+    } catch(e) {
+      console.log(e)
+    }
+  })
+})
+
 
 router.get('/get_log', [
   query('projectName').notEmpty().withMessage('projectName is null!!!')

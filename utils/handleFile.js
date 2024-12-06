@@ -126,6 +126,26 @@ function compressed(projectName, formProjectName) {
   archiver.finalize()
 }
 
+function zipFilePipe(formProjectName, res) {
+  const archiver = archiverFun('zip', {
+    zlib: { level: 9 }
+  })
+
+  archiver.on('error', (err) => {  
+    throw err
+  })
+
+  archiver.pipe(res)
+
+  archiver.directory(path.resolve(__dirname, `../tags/${formProjectName}/dist`), false); 
+
+  archiver.finalize()
+}
+
+function hasDirectory(filename) {
+  return !!fs.existsSync(filename)
+}
+
 function copyFile(from, to) {
   fs.mkdirSync(to, { recursive: true });
   
@@ -147,5 +167,7 @@ module.exports = {
   download,
   compressed,
   copyFile,
-  rmFile
+  rmFile,
+  zipFilePipe,
+  hasDirectory
 }
