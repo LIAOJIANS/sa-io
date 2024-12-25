@@ -78,8 +78,8 @@ function rmdirRecursive(projectName, diyPath) {
 
 }
 
-function rmFile(projectName) {
-  const fullPath = path.resolve(__dirname, `../project/${projectName}`)
+function rmFile(projectName, targetPath = null) {
+  const fullPath = targetPath || path.resolve(__dirname, `../project/${projectName}`)
 
   try {
     fs.statSync(fullPath)

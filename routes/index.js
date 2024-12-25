@@ -27,10 +27,12 @@ const {
   rmDir,
   rmRf,
 
+  setTempPublishConfig,
+
   Result,
 } = require('../utils');
 
-const publishTragetServer = require('../utils/publish')
+// const publishTragetServer = require('../utils/publish')
 
 const router = express.Router()
 
@@ -316,9 +318,15 @@ router.post('/build', [
       } = onter
 
       if (publish) {
-        publishTragetServer({
+        // publishTragetServer({
+        //   ...left,
+        //   localPath: path.resolve(__dirname, `../builds/${projectName}-${curTime}`)
+        // })
+
+        setTempPublishConfig({
           ...left,
-          localPath: path.resolve(__dirname, `../builds/${projectName}-${curTime}`)
+          localPath: path.resolve(__dirname, `../builds/${projectName}-${curTime}`),
+          projectName: `${projectName}-${curTime}`
         })
       }
 
@@ -462,7 +470,7 @@ router.get('/get_log', [
 
 router.get('/get_history', (req, res, next) => {
   const data = getFileContentByName('history', [])
-
+  
   new Result(data).success(res)
 })
 
@@ -479,7 +487,7 @@ router.post('/delete_ass_history', [
 
     const history = getFileContentByName('history')
 
-    const filterHistory = []
+    let filterHistory = []
 
     const handleDelete = (func) => {
       projects.forEach(c => {
@@ -488,12 +496,8 @@ router.post('/delete_ass_history', [
         func('builds', `${c.projectName}.zip`) // 压缩产物
         func('log', `${c.projectName}.log`) // 产出日志
 
-        const his = history.find(h => h.id !== c.id)
+        filterHistory = history.filter(h => h.id !== c.id)
       
-        if(his) {
-          filterHistory.push(his)
-        }
-
       })
 
       setFileContentByName(
@@ -548,10 +552,24 @@ router.post('/publish', [
       ...onter
     } = req.body
 
-    publishTragetServer({
-      ...onter,
-      localPath: path.resolve(__dirname, `../builds/${projectName}`)
-    }, () => new Result(null, 'publish success').success(res), () => new Result(null, 'publish error').fail(res))
+    try {
+      setTempPublishConfig({
+        ...onter,
+        projectName,
+        localPath: path.resolve(__dirname, `../builds/${projectName}`)
+      })
+    }
+     catch(e) {
+       console.log(e)
+     }
+
+    new Result(null, 'please check the log!').success(res)
+
+    // publishTragetServer({
+    //   ...onter,
+    //   projectName,
+    //   localPath: path.resolve(__dirname, `../builds/${projectName}`)
+    // }, () => new Result(null, 'publish success').success(res), () => new Result(null, 'publish error').fail(res))
 
   })
 })

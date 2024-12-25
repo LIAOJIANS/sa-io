@@ -2,6 +2,8 @@ const boom = require('boom')
 const { validationResult } = require('express-validator')
 const Result = require('./result')
 
+const path = require('path')
+
 const { 
   getFileContentByName,
   setFileContentByName,
@@ -24,7 +26,9 @@ const {
   gitCheckoutPro,
   gitReset,
   rmDir,
-  rmRf
+  rmRf,
+
+  handleProcess
 } = require('./processFlow')
 
 function checkBeforRes(
@@ -51,6 +55,36 @@ function checkBeforRes(
 //       req.connection.socket.remoteAddress;
 // }
 
+function setTempPublishConfig(opt) {
+  const tempPath = path.resolve(__dirname, '../temp/publish.temp.json')
+
+  setFileContentByName(
+    'publish.temp.json', 
+    opt,
+    true, 
+    tempPath
+  ) // 写入临时配置
+
+  const rmTempByName = () => { // 无论成败删除临时推送配置
+    rmFile(
+      'publish.temp.json', 
+      tempPath
+    )
+  }
+
+  handleProcess({
+    proName: 'node',
+    pro: ['./publish.js'],
+    option: {
+      cwd: path.resolve(__dirname, '../utils'),
+    },
+    filePath: path.resolve(__dirname, `../log/${opt.projectName}.log`),
+  })
+  .then(rmTempByName)
+  .catch(rmTempByName)
+
+}
+
 module.exports = {
   checkBeforRes,
   getFileContentByName,
@@ -73,6 +107,8 @@ module.exports = {
   rmDir,
   rmRf,
   zipFilePipe,
+
+  setTempPublishConfig,
 
   Result
 }

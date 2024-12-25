@@ -218,5 +218,7 @@ module.exports = {
   gitPullPro,
   gitCheckoutPro,
   rmDir,
-  rmRf
+  rmRf,
+
+  handleProcess
 }
