@@ -377,7 +377,7 @@ router.post('/build', [
 })
 
 router.post('/shell_build', [
-  (() => ['projectName','branch','commitId','targetUrl']
+  (() => ['projectName', 'branch', 'commitId', 'targetUrl']
     .map((fild) => body(fild).notEmpty().withMessage('projectName;branch;commitId;targetUrl is null!!'))
   )()
 ], (req, res, next) => {
@@ -393,40 +393,40 @@ router.post('/shell_build', [
         'Content-Type': 'application/octet-stream',
         'Content-Disposition': `attachment; filename=${filename}.zip`
       })
-      
-      if(install) {
+
+      if (install) {
         zipFilePipe(filename, res)
 
       } else {
         const { username, token } = getFileContentByName('gitToken')
-  
+
         const [http, addr] = targetUrl.split('//')
-    
+
         const gitTargetUrl = `${http}//${encodeURIComponent(username)}:${encodeURIComponent(token)}@${addr}`
-        
-          gitPro(
-            gitTargetUrl,
-            filename,
-            'tags'
-          ).then(() => {
-    
-            gitCheckoutPro(filename, branch, 'tags', true, commitId)
-              .then(() => {
-                installAfterBuildPro(filename, path.resolve(__dirname, `../tags/${filename}.log`), 'tags')
-                  .then(() => { // 压缩并暴露流
 
-                    zipFilePipe(filename, res)
+        gitPro(
+          gitTargetUrl,
+          filename,
+          'tags'
+        ).then(() => {
 
-                  })
-                  .catch(() => new Result(null, 'error!!').fail(res))
-    
-              })
-          })
-        }
-      
-    
-      
-    } catch(e) {
+          gitCheckoutPro(filename, branch, 'tags', true, commitId)
+            .then(() => {
+              installAfterBuildPro(filename, path.resolve(__dirname, `../tags/${filename}.log`), 'tags')
+                .then(() => { // 压缩并暴露流
+
+                  zipFilePipe(filename, res)
+
+                })
+                .catch(() => new Result(null, 'error!!').fail(res))
+
+            })
+        })
+      }
+
+
+
+    } catch (e) {
       console.log(e)
     }
   })
@@ -470,7 +470,7 @@ router.get('/get_log', [
 
 router.get('/get_history', (req, res, next) => {
   const data = getFileContentByName('history', [])
-  
+
   new Result(data).success(res)
 })
 
@@ -480,25 +480,31 @@ router.post('/delete_ass_history', [
       body(fild)
         .notEmpty()
         .withMessage('username or token is null'),
-  ))(),
+    ))(),
 ], (req, res, next) => {
   checkBeforRes(next, req, () => {
     const { projects } = req.body
 
     const history = getFileContentByName('history')
 
+    const projectIds = []
+
     let filterHistory = []
 
     const handleDelete = (func) => {
+
       projects.forEach(c => {
 
         func('builds', `${c.projectName}`) // 产物
         func('builds', `${c.projectName}.zip`) // 压缩产物
         func('log', `${c.projectName}.log`) // 产出日志
 
-        filterHistory = history.filter(h => h.id !== c.id)
-      
+        projectIds.push(c.id)
       })
+      
+      filterHistory =
+        projects.length === history.length ?
+          [] : history.filter(c => !projectIds.includes(c.id))
 
       setFileContentByName(
         'history',
@@ -559,9 +565,9 @@ router.post('/publish', [
         localPath: path.resolve(__dirname, `../builds/${projectName}`)
       })
     }
-     catch(e) {
-       console.log(e)
-     }
+    catch (e) {
+      console.log(e)
+    }
 
     new Result(null, 'please check the log!').success(res)
 
