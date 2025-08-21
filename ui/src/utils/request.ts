@@ -75,6 +75,7 @@ class Axios<IRequest, IResult> {
         }
       },
       (error: any) => {
+        ElMessage({ message: error.message, type: 'error' })
         return Promise.reject(error)
       }
     )

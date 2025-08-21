@@ -26,8 +26,8 @@ export default defineComponent({
 
     const state = reactive({
       formData: {
-        removeNm: true,
-        install: true,
+        removeNm: false,
+        install: false,
 
         branch: props.branch,
 

@@ -77,7 +77,7 @@ router.post(
   ],
   (req, res, next) => {
     checkBeforRes(next, req, () => {
-      const { targetUrl, projectName, useToken } = req.body
+      const { targetUrl, projectName, useToken, branch } = req.body
 
       const { username, token } = getFileContentByName('gitToken')
 
@@ -97,7 +97,15 @@ router.post(
       gitPro(
         gitTargetUrl,
         projectName
-      ).then(() => {
+      ).then(async () => {
+
+        if(branch) {
+          try {
+            await gitCheckoutPro(projectName, branch)
+          } catch(e) {
+            console.log(e)
+          }
+        }
 
         const data = getFileContentByName('projects', [])
 
@@ -107,6 +115,7 @@ router.post(
             {
               ...req.body,
               install: true,
+              branch,
               shell: false,
               branch: 'default',
               createTime: Date.now(),
@@ -187,6 +196,9 @@ router.post('/build', [
         .withMessage('username or token is null'),
     ))(),
 ], (req, res, next) => {
+
+  /** 改版，把打包任务写入默认队列：默认打包并发为 simuCount，同时控制相同打包任务数量为 concurrentCount 配置项  **/
+
   checkBeforRes(next, req, async () => {
 
     const {
@@ -201,8 +213,46 @@ router.post('/build', [
     } = req.body
 
     if (os.platform() !== 'linux' && shell) {
-      return new Result(null, 'Running shell scripts must be in a Linux environment!!!')
-        .fail(res)
+      res.status(500).send('Running shell scripts must be in a Linux environment!!!')
+    }
+
+    const task = getFileContentByName('task', {})
+
+    const { tasking, simuCount, concurrentCount } = task
+
+    if(tasking.length === simuCount) {
+      res.status(500).send(`The maximum number of simultaneous constructions is ${simuCount}`)
+    }
+
+    const projectReplace = tasking.reduce((num, item) => (
+      item === projectName ? num + 1 : num
+    ), 0)
+
+    if(projectReplace >= parseInt(concurrentCount)) {  
+      res.status(500).send(`The maximum concurrency for the same task is ${concurrentCount}`)
+    }
+    
+    setFileContentByName(
+      'task',
+      {
+        ...task,
+        tasking: [
+          ...task.tasking,
+          projectName
+        ]
+      },
+      true
+    )
+
+    const popTask = () => {
+      setFileContentByName(
+        'task',
+        {
+          ...task,
+          tasking: (task.tasking || []).filter(c => c !== projectName)
+        },
+        true
+      )
     }
 
     const curTime = Date.now()
@@ -272,7 +322,7 @@ router.post('/build', [
         } catch (e) {
 
           console.log(e)
-
+          
           setFileContentByName(
             'history',
             [
@@ -286,6 +336,8 @@ router.post('/build', [
             ],
             true
           )
+          
+          popTask()
 
           res.status(500).send('checkout error!!! Please review the log output!!!!!!')
         }
@@ -294,11 +346,11 @@ router.post('/build', [
         try {
           await gitPullPro(projectName, logPath)
         } catch (e) {
+          popTask()
           res.status(500).send('checkout error!!! Please review the log output!!!!!!')
         }
       }
     }
-
 
     new Result(`${id}`, 'building, Please review the log output!!!!!!').success(res)
 
@@ -330,6 +382,8 @@ router.post('/build', [
         })
       }
 
+      popTask()
+
     }
 
     if (shell) { // 执行sh脚本
@@ -345,6 +399,7 @@ router.post('/build', [
         .then(compressedPro)
         .catch(() => {
           status = 'error'
+          popTask()
           console.log('error')
         })
     } else { // 执行打包工作流
@@ -353,6 +408,7 @@ router.post('/build', [
           .then(compressedPro)
           .catch(() => {
             status = 'error'
+            popTask()
             console.log('error')
           })
       )
@@ -474,12 +530,12 @@ router.get('/get_history', (req, res, next) => {
   new Result(data).success(res)
 })
 
-router.post('/delete_ass_history', [
+router.post('/delete_as_history', [
   (() =>
     ['projects'].map((fild) =>
       body(fild)
         .notEmpty()
-        .withMessage('username or token is null'),
+        .withMessage('projects is null'),
     ))(),
 ], (req, res, next) => {
   checkBeforRes(next, req, () => {
@@ -657,6 +713,44 @@ router.delete('/delete_publish', [
 
     new Result(null, 'delete publish success!!').success(res)
   })
+})
+
+router.post('/set_sys_config', [
+  (() => ([
+    'simuCount',
+    'concurrentCount'
+  ].map((fail) => 
+    body(fail)
+    .notEmpty()
+    .withMessage(`${fail} is null`)
+  )))()
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+    
+    const { simuCount, concurrentCount } = req.body
+
+    const { tasking } = getFileContentByName('task', {})
+
+    if(tasking && Array.isArray(tasking) &&tasking.length > 0) {
+      return new Result(null, 'Execute when there is a task. Please make changes later.').fail(res)
+    }
+
+    setFileContentByName('task', {
+      simuCount,
+      concurrentCount,
+      tasking: []
+    }, true)
+
+    new Result(null, 'Update config success!!!').success(res)
+  })
+})
+
+
+router.get('/get_sys_config', (req, res, next) => {
+
+  const task = getFileContentByName('task', {})
+  
+  new Result(task, 'success').success(res)
 })
 
 router.use((req, res, next) => {

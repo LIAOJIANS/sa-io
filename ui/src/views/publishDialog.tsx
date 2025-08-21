@@ -28,10 +28,10 @@ export default defineComponent({
       formData: {
         describe: '',
         pubTargetIp: '',
-        pubTargetProt: '',
+        pubTargetProt: '22',
         pubTargetDir: '',
-        pubTargetUser: '',
-        pubTargetPwd: '',
+        pubTargetUser: 'root',
+        pubTargetPwd: 'wison@2015',
       },
       rules: {
         describe: [{ required: true, message: 'Please enter the describe', trigger: 'change' }],

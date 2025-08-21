@@ -1,5 +1,5 @@
 import { defineComponent, onMounted, reactive } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 import { createProject, getProjects, deleteProject } from '../api'
 import Build from './build'
@@ -13,6 +13,7 @@ export default defineComponent({
       formData: {
         projectName: '',
         targetUrl: '',
+        branch: 'master',
         useToken: true
       },
 
@@ -30,6 +31,7 @@ export default defineComponent({
 
       rules: {
         projectName: [{ required: true, message: 'Please enter the git Project Name', trigger: 'change' }],
+        branch: [{ required: true, message: 'Please enter the git Branch', trigger: 'change' }],
         targetUrl: [{ required: true, message: 'Please enter the git Target Url', trigger: 'change', }]
       }
     })
@@ -71,15 +73,27 @@ export default defineComponent({
       },
 
       delete: (projectName: string) => {
-        methods.loading('tab', true)
 
-        deleteProject(projectName)
+        ElMessageBox.confirm(
+          'delete project ?',
+          'Warning',
+          {
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel',
+            type: 'warning'
+          }
+        )
           .then(() => {
-            methods.loading('tab')
+            methods.loading('tab', true)
 
-            methods.fetchData()
+            deleteProject(projectName)
+              .then(() => {
+                methods.loading('tab')
+    
+                methods.fetchData()
+              })
+              .catch(() => methods.loading('tab'))
           })
-          .catch(() => methods.loading('tab'))
       }
     }
 
@@ -144,6 +158,9 @@ export default defineComponent({
           </el-form-item>
           <el-form-item label="Target Url" prop="targetUrl" >
             <el-input v-model={state.formData.targetUrl} clearable />
+          </el-form-item>
+          <el-form-item label="Target Url" prop="branch" >
+            <el-input v-model={state.formData.branch} clearable />
           </el-form-item>
           <el-form-item label="Use Git Config" prop="useToken" >
             <el-checkbox v-model={state.formData.useToken}></el-checkbox>

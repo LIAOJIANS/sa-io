@@ -179,7 +179,34 @@ export default defineComponent({
           }))
         )
           .then((res) => {
+            handler.fetchData()
             ElMessage({ message: 'success!!', type: 'success' });
+            state.loading = false;
+          })
+          .catch(() => (state.loading = false));
+      },
+
+      fetchData: () => {
+        state.loading = true;
+        getHistroys<
+          [
+            {
+              buildTime: number;
+              projectName: string;
+              status: string;
+              branch: string;
+            },
+          ]
+        >()
+          .then((res) => {
+            state.historys = state.soureHistory = (res.data.content || []).sort(
+              (a, b) => b.buildTime - a.buildTime,
+            );
+  
+            state.collapse = state.historys.map(
+              (c) => `${c.buildTime} - ${c.projectName}`,
+            );
+  
             state.loading = false;
           })
           .catch(() => (state.loading = false));
@@ -187,30 +214,9 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      state.loading = true;
-      getHistroys<
-        [
-          {
-            buildTime: number;
-            projectName: string;
-            status: string;
-            branch: string;
-          },
-        ]
-      >()
-        .then((res) => {
-          state.historys = state.soureHistory = (res.data.content || []).sort(
-            (a, b) => b.buildTime - a.buildTime,
-          );
 
-          state.collapse = state.historys.map(
-            (c) => `${c.buildTime} - ${c.projectName}`,
-          );
-
-          state.loading = false;
-        })
-        .catch(() => (state.loading = false));
-
+      handler.fetchData()
+    
       getProjects<[]>()
         .then((res) => {
 

@@ -42,4 +42,9 @@ export const getPublishById =
   <T>(id: any) => request<T>({ url: `/get_publish_item_by_id?id=${id}` })
 
 export const deleteHistory = 
-  <T>(projects: any) => request<T>({ url: '/delete_ass_history', method: 'post', data: { projects } })
+  <T>(projects: any) => request<T>({ url: '/delete_as_history', method: 'post', data: { projects } })
+
+export const getSysConfig = <T>() => request<T>({ url: '/get_sys_config' })
+
+export const setSysConfig = 
+  (data: { concurrentCount: string, simuCount: string }) => request({ url: '/set_sys_config', method: 'post', data })
