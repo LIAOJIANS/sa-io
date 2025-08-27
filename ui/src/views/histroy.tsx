@@ -5,6 +5,7 @@ import { ElMessage } from 'element-plus';
 import { getHistroys, download, getPublishList, publish, getProjects, deleteHistory } from '../api';
 import { download as dow } from '../utils/download';
 import LogDialog from './logDialog';
+import TerminalDialog from './terminalDialog'
 
 import { PublishItem } from './publishConfig';
 
@@ -15,6 +16,8 @@ export default defineComponent({
       soureHistory: [],
       logDialogVisible: false,
       publishDialogVisible: false,
+      terminalDialog: false,
+      terminalProjectName: '',
       currentName: '',
       collapse: [],
       loading: false,
@@ -24,6 +27,8 @@ export default defineComponent({
       projects: [],
       searchProjectName: ''
     } as {
+      terminalProjectName: string
+      terminalDialog: boolean
       historys: {
         buildTime: number;
         projectName: string;
@@ -79,6 +84,15 @@ export default defineComponent({
     ]
 
     const handler = {
+
+      openTerminal: (e: MouseEvent, projectName: string) => {
+        e.preventDefault()
+        e.stopPropagation()
+
+        state.terminalDialog = true
+        state.terminalProjectName = projectName
+      },
+
       getPublishList: () => {
         getPublishList<[]>().then((res) => {
           state.publishList = res.data.content || [];
@@ -254,12 +268,18 @@ export default defineComponent({
             <el-collapse-item
               v-slots={{
                 title: () => (
-                  <div>
-                    {dateFormat(
-                      c.buildTime,
-                      '{Y}-{MM}-{DD} {A} {hh}:{ii}:{ss}',
-                    )}{' '}
-                    - {c.projectName}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <p>
+                      {dateFormat(
+                        c.buildTime,
+                        '{Y}-{MM}-{DD} {A} {hh}:{ii}:{ss}',
+                      )}{' '}
+                      - {c.projectName}
+                    </p>
+                    
+                    <p onClick={(e: MouseEvent) => handler.openTerminal(e, c.projectName)} style={{ color: '#409eff', cursor: 'pointer', paddingRight: '10%' }}>
+                      Terminal
+                    </p>
                   </div>
                 ),
               }}
@@ -346,6 +366,14 @@ export default defineComponent({
             projectName={state.currentName}
             dialogFormVisible={state.logDialogVisible}
             onCloseDialog={() => (state.logDialogVisible = false)}
+          />
+        )}
+
+        {state.terminalDialog && (
+          <TerminalDialog 
+            terminalDialog={state.terminalDialog}
+            terminalProjectName={state.terminalProjectName}
+            onCloseDialog={() => (state.terminalDialog = false)}
           />
         )}
 

@@ -25,7 +25,8 @@
     "js-hodgepodge": "^1.3.3",
     "morgan": "~1.9.1",
     "nodemon": "^2.0.7",
-    "ssh2": "^0.8.9"
+    "ssh2": "^0.8.9",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.7",

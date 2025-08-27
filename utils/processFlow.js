@@ -16,7 +16,8 @@ function handleProcess(
     pro, 
     option = {},
     filePath,
-    setLog = true
+    setLog = true,
+    isCover = false
   }
 ) {
   return new Promise((reslove, reject) => {
@@ -37,14 +38,14 @@ function handleProcess(
     
     process.on('close', (code) => {
 
-      code == 0 ? reslove() : reject()
+      code == 0 ? reslove(log) : reject()
 
       // 写入日志，并开启sse单项通信推送日志
       if(setLog) {
         setFileContentByName(
           '',
           log,
-          false,
+          isCover,
           filePath
         )
       }
@@ -207,6 +208,19 @@ function rmRf(reName, projectName) {
   })
 }
 
+function wsPro(proName, projectName) {
+  return handleProcess({
+    proName,
+    pro: [],
+    option: { 
+      shell: true,
+      cwd: path.resolve(__dirname, `../project/${projectName}`)
+    },
+    filePath: path.resolve(__dirname, `../log/ws/${projectName}.log`),
+    isCover: true
+  })
+}
+
 module.exports = {
   gitPro,
   shellPro,
@@ -219,6 +233,7 @@ module.exports = {
   gitCheckoutPro,
   rmDir,
   rmRf,
+  wsPro,
 
-  handleProcess
+  handleProcess,
 }

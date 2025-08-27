@@ -27,6 +27,7 @@ const {
   gitReset,
   rmDir,
   rmRf,
+  wsPro,
 
   handleProcess
 } = require('./processFlow')
@@ -96,6 +97,7 @@ module.exports = {
   rmFile,
   gitReset,
   hasDirectory,
+  zipFilePipe,
   
   gitPullPro,
   gitPro,
@@ -106,7 +108,7 @@ module.exports = {
   gitCheckoutPro,
   rmDir,
   rmRf,
-  zipFilePipe,
+  wsPro,
 
   setTempPublishConfig,
 
