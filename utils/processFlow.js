@@ -216,8 +216,7 @@ function wsPro(proName, projectName) {
       shell: true,
       cwd: path.resolve(__dirname, `../project/${projectName}`)
     },
-    filePath: path.resolve(__dirname, `../log/ws/${projectName}.log`),
-    isCover: true
+    filePath: path.resolve(__dirname, `../log/ws/${projectName}.log`)
   })
 }
 

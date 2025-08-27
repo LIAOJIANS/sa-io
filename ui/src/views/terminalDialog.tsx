@@ -1,6 +1,7 @@
 import { defineComponent, reactive, ref, onMounted, onUnmounted, nextTick } from "vue";
 import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
+import { getWsLog } from '../api'
 
 export default defineComponent({
   props: {
@@ -18,8 +19,14 @@ export default defineComponent({
       terminal: null,
       currentCommand: '',
       socket: null,
-      isConnecting: false
+      isConnecting: false,
+      promptPrefix: ` > `,
+      active: 'terminal',
+      logContent: ''
     } as {
+      logContent: string
+      active: string
+      promptPrefix: string,
       terminal: Terminal | null,
       currentCommand: string,
       socket: WebSocket | null,
@@ -34,6 +41,7 @@ export default defineComponent({
           cursorBlink: true,
           cursorStyle: 'underline',
           fontSize: 14,
+          lineHeight: 1.5,
           fontFamily: 'Consolas, Monaco, "Courier New", monospace',
           theme: {
             foreground: '#e0e0e0',
@@ -48,6 +56,7 @@ export default defineComponent({
 
           state.terminal.write('Welcome to Vue3 Terminal\r\n');
           state.terminal.write('Type "help" for available commands\r\n');
+          state.terminal.write(state.promptPrefix);
         }
 
         state.terminal.onData((data: string) => {
@@ -63,12 +72,15 @@ export default defineComponent({
             state.terminal?.write('  clear - Clear terminal\r\n');
             state.terminal?.write('  info - Show system info\r\n');
             state.terminal?.write('  connect - Connect to server\r\n');
+            state.terminal?.write(state.promptPrefix);
             break;
           case 'clear':
             state.terminal?.clear();
+            state.terminal?.write(state.promptPrefix);
             break;
           case 'info':
             state.terminal?.write('Sa-io Terminal v1.0.0\r\n');
+            state.terminal?.write(state.promptPrefix);
             break;
           case 'connect':
             methods.connectToServer();
@@ -79,6 +91,7 @@ export default defineComponent({
             } else {
               state.terminal?.write(`Command not found: ${command}\r\n`);
               state.terminal?.write('Type "help" for available commands\r\n');
+              state.terminal?.write(state.promptPrefix);
             }
         }
       },
@@ -87,7 +100,7 @@ export default defineComponent({
         if (!!state.socket) {
           state.socket.close()
         }
-        
+
         const wsUrl = 'ws://192.168.1.49:3000';
         state.socket = new WebSocket(wsUrl);
 
@@ -96,38 +109,64 @@ export default defineComponent({
         state.socket.onopen = () => {
           state.isConnecting = false;
           state.terminal?.write('Connected to server successfully!\r\n');
+
+          state.promptPrefix = `${props.terminalProjectName} >`
+
+          state.terminal?.write(state.promptPrefix);
         };
 
         state.socket.onmessage = (event) => {
           state.terminal?.write(event.data + '\r\n');
+
+          state.terminal?.write(state.promptPrefix);
         };
 
         state.socket.onerror = (error: any) => {
           state.isConnecting = false;
-          
+
           state.terminal?.write(`Connection error: ${error.message}\r\n`);
+
+          state.terminal?.write(state.promptPrefix);
         };
 
         state.socket.onclose = () => {
           state.isConnecting = false;
           state.terminal?.write('Disconnected from server\r\n');
+
+          state.terminal?.write(state.promptPrefix);
         };
       }
     }
 
     const handler = {
+      tabClick: () => {
+
+        if(state.active !== 'logs') {
+          return
+        }
+        
+        state.isConnecting = true
+        getWsLog<string>(props.terminalProjectName!)
+          .then(res => {
+            state.logContent = (res.data.content || '').replace(/<br>/g, '\n')
+            state.isConnecting = false
+          }).catch(() => (state.isConnecting = false))
+      },
+
       closeDialog: () => emit('closeDialog'),
 
       handleTerminalInput: (data: string) => {
         const charCode = data.charCodeAt(0);
 
         console.log(charCode);
-        
 
         if (charCode === 13) {
-          state.terminal?.write('\r\r\n');
-          methods.executeCommand(state.currentCommand);
-          state.currentCommand = '';
+          state.terminal?.write('\r\n');
+
+          if (!!state.currentCommand) {
+            methods.executeCommand(state.currentCommand);
+            state.currentCommand = '';
+          }
           return;
         }
 
@@ -147,7 +186,7 @@ export default defineComponent({
     }
 
     onMounted(() => {
-     
+
       nextTick(methods.initTerminal)
       // window.addEventListener('resize', handleResize);
     });
@@ -174,14 +213,23 @@ export default defineComponent({
           </>
         }}
       >
-        <div class="terminal-container">
-          <div 
-            ref={terminalRef}
-            style={{ width: '100%', height: '450px' }} 
-            v-loading={state.isConnecting} 
-            class="terminal-wrapper"
-          ></div>
-       </div>
+
+        <el-tabs v-model={ state.active } onTabClick={ handler.tabClick } >
+          <el-tab-pane label="Terminal" name="terminal">
+            <div class="terminal-container">
+              <div
+                ref={terminalRef}
+                style={{ width: '100%', height: '590px' }}
+                v-loading={state.isConnecting}
+                class="terminal-wrapper"
+              ></div>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="Terminal Logs" name="logs">
+            <el-input type="textarea" v-model={state.logContent} rows={30} readonly></el-input>
+          </el-tab-pane>
+        </el-tabs>
+
       </el-dialog>
     )
   }

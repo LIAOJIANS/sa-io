@@ -524,6 +524,21 @@ router.get('/get_log', [
   })
 })
 
+router.get('/get_ws_log', [
+  query('projectName').notEmpty().withMessage('projectName is null!!!')
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+
+    const { projectName } = req.query
+
+    const logPath = path.resolve(__dirname, `../log/ws/${projectName}.log`)
+
+    const logContent = getFileContentByName(null, '', logPath)
+
+    new Result(logContent).success(res)
+  })
+})
+
 router.get('/get_history', (req, res, next) => {
   const data = getFileContentByName('history', [])
 
