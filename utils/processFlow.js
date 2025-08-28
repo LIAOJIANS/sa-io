@@ -220,6 +220,24 @@ function wsPro(proName, projectName) {
   })
 }
 
+function rmRfExcludeByName(name, projectName) {
+  return handleProcess({
+    proName: 'find',
+    pro: [
+      '.',
+      '-mindepth', '1',
+      '-maxdepth', '1',
+      '!', '-name', name,
+      '-exec', 'rm', '-rf', '{}', '+'
+    ],
+    option: { 
+      shell: true,
+      cwd: path.resolve(__dirname, `../tags/${projectName}`)
+    },
+    filePath: path.resolve(__dirname, `../tags/${projectName}.log`)
+  })
+}
+
 module.exports = {
   gitPro,
   shellPro,
@@ -233,6 +251,7 @@ module.exports = {
   rmDir,
   rmRf,
   wsPro,
+  rmRfExcludeByName,
 
   handleProcess,
 }

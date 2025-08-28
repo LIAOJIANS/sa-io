@@ -28,6 +28,7 @@ const {
   rmDir,
   rmRf,
   wsPro,
+  rmRfExcludeByName,
 
   handleProcess
 } = require('./processFlow')
@@ -109,6 +110,7 @@ module.exports = {
   rmDir,
   rmRf,
   wsPro,
+  rmRfExcludeByName,
 
   setTempPublishConfig,
 

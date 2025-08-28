@@ -26,6 +26,7 @@ const {
   gitPullPro,
   rmDir,
   rmRf,
+  rmRfExcludeByName,
 
   setTempPublishConfig,
 
@@ -434,7 +435,7 @@ router.post('/build', [
 
 router.post('/shell_build', [
   (() => ['projectName', 'branch', 'commitId', 'targetUrl']
-    .map((fild) => body(fild).notEmpty().withMessage('projectName;branch;commitId;targetUrl is null!!'))
+    .map((fild) => body(fild).notEmpty().withMessage(`${fild} is null!!`))
   )()
 ], (req, res, next) => {
   checkBeforRes(next, req, () => {
@@ -465,7 +466,6 @@ router.post('/shell_build', [
           filename,
           'tags'
         ).then(() => {
-
           gitCheckoutPro(filename, branch, 'tags', true, commitId)
             .then(() => {
               installAfterBuildPro(filename, path.resolve(__dirname, `../tags/${filename}.log`), 'tags')
@@ -473,6 +473,10 @@ router.post('/shell_build', [
 
                   zipFilePipe(filename, res)
 
+                  rmRfExcludeByName(
+                    'dist',
+                    filename
+                  )
                 })
                 .catch(() => new Result(null, 'error!!').fail(res))
 
@@ -480,14 +484,13 @@ router.post('/shell_build', [
         })
       }
 
-
+      // rmRf
 
     } catch (e) {
       console.log(e)
     }
   })
 })
-
 
 router.get('/get_log', [
   query('projectName').notEmpty().withMessage('projectName is null!!!')
@@ -759,7 +762,6 @@ router.post('/set_sys_config', [
     new Result(null, 'Update config success!!!').success(res)
   })
 })
-
 
 router.get('/get_sys_config', (req, res, next) => {
 
