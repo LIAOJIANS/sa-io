@@ -49,6 +49,11 @@ export const getSysConfig = <T>() => request<T>({ url: '/get_sys_config' })
 export const setSysConfig = 
   (data: { concurrentCount: string, simuCount: string }) => request({ url: '/set_sys_config', method: 'post', data })
 
-
 export const getWsLog = 
   <T>(projectName: string) => request<T>({ url: `/get_ws_log?projectName=${projectName}` })
+
+export const delTagByName = 
+  <T>(tagName: string) => request<T>({ url: `/delete_tags?tagName=${tagName}`, method: 'delete' })
+
+export const getTags = 
+  <T>(tagName: string) => request<T>({ url: `/get_tags?tagName=${tagName}`, method: 'post' })

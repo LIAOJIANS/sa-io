@@ -17,6 +17,7 @@ const {
   rmFile,
   zipFilePipe,
   hasDirectory,
+  getDirAllFile,
 
   gitPro,
   installAfterBuildPro,
@@ -27,6 +28,7 @@ const {
   rmDir,
   rmRf,
   rmRfExcludeByName,
+  gitCheckCommitId,
 
   setTempPublishConfig,
 
@@ -383,8 +385,21 @@ router.post('/build', [
         })
       }
 
-      popTask()
+      // 查找构建对应的git commit id 转为tags缓存
 
+      gitCheckCommitId(projectName)
+        .then(data => {
+          const commitId = (data || '').trim()
+          
+          const tagPaht = path.resolve(__dirname, `../tags/${projectName}-${branch === 'default' ? 'master' : branch}-${commitId}/dist`)
+
+          copyFile(
+            path.resolve(__dirname, `../project/${projectName}/dist`),
+            tagPaht
+          )
+        })
+
+      popTask()
     }
 
     if (shell) { // 执行sh脚本
@@ -768,6 +783,47 @@ router.get('/get_sys_config', (req, res, next) => {
   const task = getFileContentByName('task', {})
   
   new Result(task, 'success').success(res)
+})
+
+router.delete('/delete_tags', [
+  query('tagName').notEmpty().withMessage('tagName is null!')
+],
+(req, res, next) => {
+  checkBeforRes(next, req, () => {
+    const { tagName } = req.query
+
+    try {
+      os.platform() === 'linux' ? 
+        rmRf('tags',tagName ) : rmdirRecursive(tagName, 'tags')
+        
+      new Result().success(res)
+    } catch(e) {
+
+      console.log(e)
+
+      new Result().fail(res)
+    }
+
+  })
+})
+
+router.post('/get_tags', (req, res, next) => {
+
+  checkBeforRes(next, req, () => {
+    const { tagName } = req.query
+
+    try {
+      const { dirs } = getDirAllFile(path.resolve(__dirname, `../tags`))
+
+      new Result(
+        dirs.filter(c => c.indexOf(tagName) > -1)
+      ).success(res)
+
+    } catch(e) {
+      console.log(e)
+      new Result([]).fail(res)
+    }
+  })
 })
 
 router.use((req, res, next) => {

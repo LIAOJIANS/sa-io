@@ -21,7 +21,7 @@ export default defineComponent({
       socket: null,
       isConnecting: false,
       promptPrefix: ` > `,
-      active: 'terminal',
+      active: 'logs',
       logContent: ''
     } as {
       logContent: string
@@ -215,7 +215,7 @@ export default defineComponent({
       >
 
         <el-tabs v-model={ state.active } onTabClick={ handler.tabClick } >
-          <el-tab-pane label="Terminal" name="terminal">
+          <el-tab-pane label="Terminal" name="logs">
             <div class="terminal-container">
               <div
                 ref={terminalRef}
@@ -225,7 +225,7 @@ export default defineComponent({
               ></div>
             </div>
           </el-tab-pane>
-          <el-tab-pane label="Terminal Logs" name="logs">
+          <el-tab-pane label="Terminal Logs" name="terminal">
             <el-input type="textarea" v-model={state.logContent} rows={30} readonly></el-input>
           </el-tab-pane>
         </el-tabs>

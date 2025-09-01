@@ -13,7 +13,8 @@ const {
   copyFile,
   rmFile,
   zipFilePipe,
-  hasDirectory
+  hasDirectory,
+  getDirAllFile
 } = require('./handleFile')
 
 const {
@@ -29,6 +30,7 @@ const {
   rmRf,
   wsPro,
   rmRfExcludeByName,
+  gitCheckCommitId,
 
   handleProcess
 } = require('./processFlow')
@@ -99,6 +101,7 @@ module.exports = {
   gitReset,
   hasDirectory,
   zipFilePipe,
+  getDirAllFile,
   
   gitPullPro,
   gitPro,
@@ -111,6 +114,7 @@ module.exports = {
   rmRf,
   wsPro,
   rmRfExcludeByName,
+  gitCheckCommitId,
 
   setTempPublishConfig,
 

@@ -147,7 +147,10 @@ function hasDirectory(filename) {
 }
 
 function copyFile(from, to) {
-  fs.mkdirSync(to, { recursive: true });
+
+  if(!hasDirectory(to)) {
+    fs.mkdirSync(to, { recursive: true });
+  }
   
   fs.readdirSync(from).forEach(file => {  
     const srcFile = path.join(from, file);  
@@ -156,8 +159,38 @@ function copyFile(from, to) {
     fs.statSync(srcFile).isDirectory() ?   
       copyFile(srcFile, destFile) :  
       fs.copyFileSync(srcFile, destFile)
-      
   })
+
+}
+
+function getDirAllFile(filePath) {
+
+  if(!hasDirectory(filePath)) {
+    return {
+      dirs: [],
+      files: [],
+      all: []
+    }
+  }
+
+  let dirs = []
+  let files = []
+
+  fs.readdirSync(filePath)
+    .forEach(file => {
+
+      const srcFile = path.join(filePath, file); 
+
+      fs.statSync(srcFile).isDirectory() ? 
+        dirs.push(file) : 
+        files.push(file)
+    })
+
+  return {
+    dirs,
+    files,
+    all: [ ...dirs, ...files ]
+  }
 }
 
 module.exports = {
@@ -169,5 +202,6 @@ module.exports = {
   copyFile,
   rmFile,
   zipFilePipe,
-  hasDirectory
+  hasDirectory,
+  getDirAllFile
 }

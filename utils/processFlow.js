@@ -238,6 +238,21 @@ function rmRfExcludeByName(name, projectName) {
   })
 }
 
+function gitCheckCommitId(projectName) {
+  return handleProcess({
+    proName: 'git',
+    pro: [
+      'rev-parse',
+      'HEAD'
+    ],
+    option: {
+      cwd: path.resolve(__dirname, `../project/${projectName}`)
+    },
+    filePath: '',
+    setLog: false
+  })
+}
+
 module.exports = {
   gitPro,
   shellPro,
@@ -252,6 +267,7 @@ module.exports = {
   rmRf,
   wsPro,
   rmRfExcludeByName,
+  gitCheckCommitId,
 
   handleProcess,
 }

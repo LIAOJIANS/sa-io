@@ -3,6 +3,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 
 import { createProject, getProjects, deleteProject } from '../api'
 import Build from './build'
+import TagsDialog from './tagsDialog'
 
 export default defineComponent({
   setup() {
@@ -21,6 +22,9 @@ export default defineComponent({
         formLoading: false,
         tabLoading: false
       },
+
+      tagsProjectName: '',
+      tagsDialog: false,
 
       dialogFormVisible: false,
       buildDailogVisible: false,
@@ -70,6 +74,11 @@ export default defineComponent({
         
         state.buildProjectName = row
         state.buildDailogVisible = true
+      },
+
+      historyTags: (projectName: string) => {
+        state.tagsProjectName = projectName
+        state.tagsDialog = true
       },
 
       delete: (projectName: string) => {
@@ -130,10 +139,11 @@ export default defineComponent({
         <el-table-column prop="projectName" label="Project Name"  width="300"/>
         <el-table-column prop="branch" label="Branch"  width="100"/>
         <el-table-column prop="targetUrl" label="Target Url" />
-        <el-table-column label="operation" width="180"
+        <el-table-column label="operation" width="240"
           v-slots={{
             default: ({ row }:  { row: any } ) => <>
               <el-button type="primary" onClick={ () => handler.beforeBuild(row) }>build</el-button>
+              <el-button type="warning" onClick={ () => handler.historyTags(row.projectName) }>tags</el-button>
               <el-button type="danger" onClick={ () => handler.delete(row.projectName) }>del</el-button>
             </>
           }}
@@ -174,6 +184,14 @@ export default defineComponent({
           projectName={ state.buildProjectName.projectName }
           branch={ state.buildProjectName.branch }
           onCloseDialog={ handler.closeBuildDialog }
+        />
+      ) }
+
+      { state.tagsDialog && (
+        <TagsDialog
+          tagsDialog={ state.tagsDialog }
+          tagsProjectName={ state.tagsProjectName }
+          onCloseDialog={ () => state.tagsDialog = false }
         />
       ) }
       
