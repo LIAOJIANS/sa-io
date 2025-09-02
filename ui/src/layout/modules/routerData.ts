@@ -31,6 +31,7 @@ const routes: IRoutesData[] = [
     childrens: [
       { name: 'Git Token', title: '仓库token配置', page: '/gitToken'},
       { name: 'Sys Config', title: '系统配置', page: '/sysConfig'},
+      { name: 'Ws Config', title: 'WebScoket配置', page: '/wsConfig'},
     ]
   }
 ]

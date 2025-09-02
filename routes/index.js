@@ -778,9 +778,29 @@ router.post('/set_sys_config', [
   })
 })
 
+router.post('/set_ws_config', [
+  body('wsUrl').notEmpty().withMessage('wsUrl is null!')
+], (req, res, next) => {
+  checkBeforRes(next, req, () => {
+    
+    const { wsUrl } = req.body
+
+    setFileContentByName('ws', {wsUrl}, true)
+
+    new Result(null, 'Update config success!!!').success(res)
+  })
+})
+
 router.get('/get_sys_config', (req, res, next) => {
 
   const task = getFileContentByName('task', {})
+  
+  new Result(task, 'success').success(res)
+})
+
+router.get('/get_ws_config', (req, res, next) => {
+
+  const task = getFileContentByName('ws', {})
   
   new Result(task, 'success').success(res)
 })

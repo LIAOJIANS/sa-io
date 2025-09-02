@@ -1,7 +1,7 @@
 import { defineComponent, reactive, ref, onMounted, onUnmounted, nextTick } from "vue";
 import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
-import { getWsLog } from '../api'
+import { getWsLog, getWsConfig } from '../api'
 
 export default defineComponent({
   props: {
@@ -22,9 +22,11 @@ export default defineComponent({
       isConnecting: false,
       promptPrefix: ` > `,
       active: 'logs',
-      logContent: ''
+      logContent: '',
+      wsUrl: ''
     } as {
       logContent: string
+      wsUrl: string
       active: string
       promptPrefix: string,
       terminal: Terminal | null,
@@ -100,9 +102,8 @@ export default defineComponent({
         if (!!state.socket) {
           state.socket.close()
         }
-
-        const wsUrl = 'ws://192.168.1.49:3000';
-        state.socket = new WebSocket(wsUrl);
+        
+        state.socket = new WebSocket(state.wsUrl || 'ws://192.168.1.99:3000');
 
         state.isConnecting = true;
 
@@ -185,7 +186,12 @@ export default defineComponent({
       }
     }
 
-    onMounted(() => {
+    onMounted(async () => {
+
+      await getWsConfig<{ wsUrl: string}>()
+        .then(res => {
+          state.wsUrl = res.data.content.wsUrl
+        })
 
       nextTick(methods.initTerminal)
       // window.addEventListener('resize', handleResize);

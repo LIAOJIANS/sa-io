@@ -43,10 +43,13 @@ export default defineComponent({
 
     onMounted(() => {
 
+      state.loading = true
       getSysConfig<{ concurrentCount: string, simuCount: string }>()
         .then(res => {
           state.formData = res.data.content
+          state.loading = false
         })
+        .catch(() => (state.loading = false))
     })
 
     return () => <div>

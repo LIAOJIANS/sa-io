@@ -47,12 +47,12 @@ export default defineComponent({
           .then(res => {
 
             state.tableData = res.data.content.map(c => {
-              const [ tagName, branch, commitId ] = c.split('-')
+              const item = c.split('-')
 
               return {
-                tagName,
-                branch,
-                commitId
+                tagName: props.tagsProjectName!,
+                branch: item[item.length - 2],
+                commitId: item[item.length - 1],
               }
             })
             
